@@ -83,16 +83,16 @@ public class DeepSeekApiClient {
             throw new IllegalArgumentException("用户问题不能为空");
         }
         
-        if (systemPrompt == null || systemPrompt.isEmpty()) {
-            throw new IllegalArgumentException("系统提示词不能为空");
-        }
+        // if (systemPrompt == null || systemPrompt.isEmpty()) {
+        //     throw new IllegalArgumentException("系统提示词不能为空");
+        // }
         
         // 构建请求体
         ChatRequest request = buildChatRequest(userQuestion, systemPrompt);
         
         // 转换为JSON
         String requestBody = objectMapper.writeValueAsString(request);
-        logger.debug("发送请求: {}", requestBody);
+        logger.debug("调用DeepSeekAPI-->chatWithDefault");
         
         // 发送HTTP请求
         HttpRequest httpRequest = buildHttpRequest(requestBody);
@@ -118,9 +118,9 @@ public class DeepSeekApiClient {
             throw new IllegalArgumentException("用户问题不能为空");
         }
         
-        if (systemPrompt == null || systemPrompt.isEmpty()) {
-            throw new IllegalArgumentException("系统提示词不能为空");
-        }
+        // if (systemPrompt == null || systemPrompt.isEmpty()) {
+        //     throw new IllegalArgumentException("系统提示词不能为空");
+        // }
         
         // 构建请求体
         ChatRequest request = buildChatRequest(userQuestion, systemPrompt);
@@ -135,7 +135,7 @@ public class DeepSeekApiClient {
         
         // 转换为JSON
         String requestBody = objectMapper.writeValueAsString(request);
-        logger.debug("发送请求: {}", requestBody);
+        logger.debug("调用DeepSeekAPI-->chatWithCustomParams");
         
         // 发送HTTP请求
         HttpRequest httpRequest = buildHttpRequest(requestBody);
@@ -187,7 +187,7 @@ public class DeepSeekApiClient {
      * 解析API响应
      */
     private String parseResponse(String responseBody) throws Exception {
-        logger.debug("接收到响应: {}", responseBody);
+        logger.debug("接收到DeepSeekAPI响应");
         
         ChatResponse response = objectMapper.readValue(responseBody, ChatResponse.class);
         
