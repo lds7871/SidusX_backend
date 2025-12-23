@@ -1,0 +1,5 @@
+DTO
+加入并使用以下import来构建DTO (SpringDoc OpenAPI for Spring Boot 4)
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Getter;
+import lombok.Setter;

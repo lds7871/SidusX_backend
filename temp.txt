@@ -1,0 +1,1 @@
+这是一个复制的Spring项目，我现在需要对整个项目初始化，保留config内的IP和pass_token机制，保留swagger，restTemplate，Mybaties，HttpClient和configManager。移除websocket相关。控制层仅保留ServerInfoController，移除tasks和util的所有文件。项目改名为GHstart。仅让他成为一个可以启动的，包含config和基础控制类的项目，需要保留所有cmd。
