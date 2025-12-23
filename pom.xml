@@ -140,7 +140,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.34</version>
+            <version>1.18.40</version>
             <scope>provided</scope>
         </dependency>
 
@@ -226,6 +226,14 @@
                     <!-- Project-specific JDK path for Windows -->
                     <!-- Will use JAVA_HOME if the specific path is not available -->
                     <fork>true</fork>
+                    <!-- Lombok annotation processor configuration -->
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.40</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
             
