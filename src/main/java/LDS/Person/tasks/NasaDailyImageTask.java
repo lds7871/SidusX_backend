@@ -24,7 +24,7 @@ public class NasaDailyImageTask {
      * cron表达式: 0 0 2 * * ? 表示每天凌晨2点执行
      * 秒 分 时 日 月 周 年
      */
-    @Scheduled(cron = "0 55 16 * * ?")//0 0 2 * * ?
+    @Scheduled(cron = "0 0 2 * * ?")//0 0 2 * * ?
     public void fetchApodImageDaily() {
         logger.info("===== 开始执行 NASA APOD 每日图片定时任务 =====");
         try {
