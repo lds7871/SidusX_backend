@@ -5,7 +5,7 @@ cd /d %~dp0
 echo 正在从 GitHub 同步项目...
 
 git fetch origin
-git pull origin  mian_JDK25+Spring4
+git pull origin  main
 
 echo 同步完成！
 pause
