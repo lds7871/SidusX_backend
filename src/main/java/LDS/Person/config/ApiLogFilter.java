@@ -12,7 +12,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -22,6 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import java.sql.PreparedStatement;
 import org.postgresql.util.PGobject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 合并的 API 日志过滤器：
@@ -31,6 +33,7 @@ import org.postgresql.util.PGobject;
 @Component
 public class ApiLogFilter extends OncePerRequestFilter {
 
+    private static final Logger logger = LoggerFactory.getLogger(ApiLogFilter.class);
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
     private static final int MAX_BODY_LENGTH = 2000;
@@ -84,8 +87,11 @@ public class ApiLogFilter extends OncePerRequestFilter {
             try {
                 byte[] reqBuf = wrappedRequest.getContentAsByteArray();
                 if (reqBuf != null && reqBuf.length > 0) {
-                    String charset = wrappedRequest.getCharacterEncoding() != null ? wrappedRequest.getCharacterEncoding() : "UTF-8";
-                    String payload = new String(reqBuf, Charset.forName(charset));
+                    String charsetName = wrappedRequest.getCharacterEncoding();
+                    // 默认使用 UTF-8，避免 ISO-8859-1 导致的中文乱码
+                    java.nio.charset.Charset charset = (charsetName == null || charsetName.equalsIgnoreCase("ISO-8859-1")) 
+                        ? StandardCharsets.UTF_8 : java.nio.charset.Charset.forName(charsetName);
+                    String payload = new String(reqBuf, charset);
                     if (!payload.isBlank()) {
                         if (wrappedRequest.getContentType() != null && wrappedRequest.getContentType().contains("application/json")) {
                             try {
@@ -106,8 +112,11 @@ public class ApiLogFilter extends OncePerRequestFilter {
             try {
                 byte[] respBuf = wrappedResponse.getContentAsByteArray();
                 if (respBuf != null && respBuf.length > 0) {
-                    String charset = wrappedResponse.getCharacterEncoding() != null ? wrappedResponse.getCharacterEncoding() : "UTF-8";
-                    String payload = new String(respBuf, Charset.forName(charset));
+                    String charsetName = wrappedResponse.getCharacterEncoding();
+                    // 默认使用 UTF-8，避免 ISO-8859-1 导致的中文乱码
+                    java.nio.charset.Charset charset = (charsetName == null || charsetName.equalsIgnoreCase("ISO-8859-1")) 
+                        ? StandardCharsets.UTF_8 : java.nio.charset.Charset.forName(charsetName);
+                    String payload = new String(respBuf, charset);
                     if (!payload.isBlank()) {
                         if (wrappedResponse.getContentType() != null && wrappedResponse.getContentType().contains("application/json")) {
                             try {
@@ -134,9 +143,9 @@ public class ApiLogFilter extends OncePerRequestFilter {
             // 输出到终端
             try {
                 String jsonLog = mapper.writeValueAsString(logData);
-                System.out.println("\n========== API LOG ==========");
-                System.out.println(jsonLog);
-                System.out.println("========== END LOG ==========");
+                if (logger.isInfoEnabled()) {
+                    logger.info("\n========== API LOG ==========\n{}\n========== END LOG ==========", jsonLog);
+                }
 
                 // 插入到 api_raw_logs 表（存为 JSONB）
                 try {
