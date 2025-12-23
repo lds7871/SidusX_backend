@@ -10,7 +10,7 @@ import org.mybatis.spring.annotation.MapperScan;
  */
 @SpringBootApplication
 @EnableScheduling
-@MapperScan("LDS.Person.jmapper")
+@MapperScan("LDS.Person.repository")
 public class GHstartApplication {
 
     public static void main(String[] args) {

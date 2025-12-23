@@ -1,5 +1,5 @@
 #########################################################
--- 创建表 api_log
+-- 创建表 api_log                                         已创建
 CREATE TABLE api_log (
     id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     ip          VARCHAR(45)        NOT NULL,
@@ -123,7 +123,7 @@ COMMENT ON TABLE spacex_lunch IS '空叉航天任务表';
 
 
 #########################################################
--- 创建表 nasa_daily_image
+-- 创建表 nasa_daily_image                                 已创建
 CREATE TABLE nasa_daily_image (
     apod_id BIGSERIAL PRIMARY KEY,        -- 自增主键
     copyright VARCHAR(200),                -- 图片大标题
@@ -149,7 +149,7 @@ COMMENT ON TABLE nasa_daily_image IS 'APOD每日图片信息表';
 
 
 #########################################################
--- 创建表 api_raw_logs
+-- 创建表 api_raw_logs                                         已创建
 CREATE TABLE api_raw_logs (
                               api_raw_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                               raw_json   JSONB      NOT NULL,

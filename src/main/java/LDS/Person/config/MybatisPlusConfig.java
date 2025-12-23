@@ -2,9 +2,13 @@ package LDS.Person.config;
 
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
-// Use reflection to add PaginationInnerInterceptor when available to compile against multiple mybatis-plus versions
+import com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean;
+import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+
+import javax.sql.DataSource;
 
 /**
  * MyBatis-Plus 配置类
@@ -44,6 +48,22 @@ public class MybatisPlusConfig {
             System.err.println("Failed to add PaginationInnerInterceptor via reflection: " + e.getMessage());
         }
         return interceptor;
+    }
+
+    /**
+     * 配置 SqlSessionFactory
+     */
+    @Bean
+    public SqlSessionFactory sqlSessionFactory(DataSource dataSource, MybatisPlusInterceptor interceptor) throws Exception {
+        MybatisSqlSessionFactoryBean sqlSessionFactory = new MybatisSqlSessionFactoryBean();
+        sqlSessionFactory.setDataSource(dataSource);
+        sqlSessionFactory.setPlugins(interceptor);
+        sqlSessionFactory.setMapperLocations(
+            new PathMatchingResourcePatternResolver().getResources("classpath*:mapper/*.xml")
+        );
+        // 设置类型别名包
+        sqlSessionFactory.setTypeAliasesPackage("LDS.Person.entity");
+        return sqlSessionFactory.getObject();
     }
 
 }
