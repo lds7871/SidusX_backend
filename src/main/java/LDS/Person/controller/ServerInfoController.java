@@ -23,7 +23,7 @@ import java.util.Map;
  * 服务器监控控制器 - 获取当前 Spring 服务的内存和 JVM 虚拟机情况
  */
 @RestController
-@RequestMapping("/api/serverinfo")
+@RequestMapping("/GHapi/serverinfo")
 @Tag(name = "服务监控", description = "获取服务信息")
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class ServerInfoController {
