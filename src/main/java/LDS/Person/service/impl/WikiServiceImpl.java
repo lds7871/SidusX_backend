@@ -9,6 +9,7 @@ import LDS.Person.dto.response.WikiResponse;
 import LDS.Person.dto.response.PageResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ import java.util.List;
 
 /**
  * Wiki 业务逻辑实现类
+ * 所有数据库查询操作都在此实现
  */
 @Service
 public class WikiServiceImpl implements WikiService {
@@ -30,9 +32,11 @@ public class WikiServiceImpl implements WikiService {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     
     private final WikiMapper wikiMapper;
+    private final JdbcTemplate jdbcTemplate;
     
-    public WikiServiceImpl(WikiMapper wikiMapper) {
+    public WikiServiceImpl(WikiMapper wikiMapper, JdbcTemplate jdbcTemplate) {
         this.wikiMapper = wikiMapper;
+        this.jdbcTemplate = jdbcTemplate;
     }
     
     /**
@@ -54,7 +58,7 @@ public class WikiServiceImpl implements WikiService {
         }
         
         // 检查键名唯一性
-        Wiki existingWiki = wikiMapper.selectByKeyName(request.getKeyName());
+        Wiki existingWiki = selectByKeyName(request.getKeyName());
         if (existingWiki != null) {
             log.warn("Wiki 键名已存在: {}", request.getKeyName());
             throw new IllegalArgumentException("Wiki 键名已存在: " + request.getKeyName());
@@ -106,7 +110,7 @@ public class WikiServiceImpl implements WikiService {
         }
         
         // 检查记录是否存在
-        Wiki wiki = wikiMapper.selectById(wikiId);
+        Wiki wiki = selectById(wikiId);
         if (wiki == null) {
             log.warn("Wiki 不存在: {}", wikiId);
             return false;
@@ -146,10 +150,10 @@ public class WikiServiceImpl implements WikiService {
         int offset = (page - 1) * pageSize;
         
         // 查询总数
-        long totalCount = wikiMapper.countByCondition(request);
+        long totalCount = countByCondition(request);
         
         // 查询分页数据
-        List<Wiki> wikiList = wikiMapper.selectPageList(request, offset);
+        List<Wiki> wikiList = selectPageList(request, offset);
         
         // 转换为响应对象
         List<WikiResponse> responseList = new ArrayList<>();
@@ -180,5 +184,158 @@ public class WikiServiceImpl implements WikiService {
         response.setUpdateTime(wiki.getUpdateTime() != null ? wiki.getUpdateTime().format(DATE_FORMATTER) : null);
         response.setUpdateUser(wiki.getUpdateUser());
         return response;
+    }
+    
+    // ==================== 数据库查询方法 ====================
+    
+    /**
+     * 根据键名查询 Wiki 记录（用于唯一性检查）
+     */
+    private Wiki selectByKeyName(String keyName) {
+        String sql = "SELECT wiki_id, key_name, texts, tags, version, " +
+                     "create_time, create_user, update_time, update_user " +
+                     "FROM wiki WHERE key_name = ?";
+        try {
+            return jdbcTemplate.queryForObject(sql, new WikiRowMapper(), keyName);
+        } catch (Exception e) {
+            log.debug("查询键名对应的 Wiki 不存在: {}", keyName);
+            return null;
+        }
+    }
+    
+    /**
+     * 根据 Wiki ID 查询单条记录
+     */
+    private Wiki selectById(Long wikiId) {
+        String sql = "SELECT wiki_id, key_name, texts, tags, version, " +
+                     "create_time, create_user, update_time, update_user " +
+                     "FROM wiki WHERE wiki_id = ?";
+        try {
+            return jdbcTemplate.queryForObject(sql, new WikiRowMapper(), wikiId);
+        } catch (Exception e) {
+            log.debug("查询 Wiki ID 不存在: {}", wikiId);
+            return null;
+        }
+    }
+    
+    /**
+     * 分页查询 Wiki 列表
+     * 支持多条件过滤：key_name、tags、create_time 范围
+     */
+    private List<Wiki> selectPageList(WikiPageQueryRequest request, int offset) {
+        StringBuilder sql = new StringBuilder();
+        List<Object> params = new ArrayList<>();
+        
+        sql.append("SELECT wiki_id, key_name, texts, tags, version, ");
+        sql.append("create_time, create_user, update_time, update_user ");
+        sql.append("FROM wiki WHERE 1=1 ");
+        
+        // 键名模糊查询
+        if (request.getKeyName() != null && !request.getKeyName().trim().isEmpty()) {
+            sql.append("AND key_name ILIKE ? ");
+            params.add("%" + request.getKeyName() + "%");
+        }
+        
+        // 标签模糊查询
+        if (request.getTags() != null && !request.getTags().trim().isEmpty()) {
+            sql.append("AND tags::text ILIKE ? ");
+            params.add("%" + request.getTags() + "%");
+        }
+        
+        // 创建时间范围查询 - 开始时间
+        if (request.getCreateTimeStart() != null && !request.getCreateTimeStart().trim().isEmpty()) {
+            sql.append("AND create_time >= ? ");
+            params.add(request.getCreateTimeStart());
+        }
+        
+        // 创建时间范围查询 - 结束时间
+        if (request.getCreateTimeEnd() != null && !request.getCreateTimeEnd().trim().isEmpty()) {
+            sql.append("AND create_time <= ? ");
+            params.add(request.getCreateTimeEnd());
+        }
+        
+        // 排序和分页
+        sql.append("ORDER BY create_time DESC ");
+        sql.append("LIMIT ? OFFSET ?");
+        params.add(request.getPageSize());
+        params.add(offset);
+        
+        return jdbcTemplate.query(sql.toString(), params.toArray(new Object[0]), new WikiRowMapper());
+    }
+    
+    /**
+     * 查询符合条件的总记录数
+     */
+    private long countByCondition(WikiPageQueryRequest request) {
+        StringBuilder sql = new StringBuilder();
+        List<Object> params = new ArrayList<>();
+        
+        sql.append("SELECT COUNT(*) FROM wiki WHERE 1=1 ");
+        
+        // 键名模糊查询
+        if (request.getKeyName() != null && !request.getKeyName().trim().isEmpty()) {
+            sql.append("AND key_name ILIKE ? ");
+            params.add("%" + request.getKeyName() + "%");
+        }
+        
+        // 标签模糊查询
+        if (request.getTags() != null && !request.getTags().trim().isEmpty()) {
+            sql.append("AND tags::text ILIKE ? ");
+            params.add("%" + request.getTags() + "%");
+        }
+        
+        // 创建时间范围查询 - 开始时间
+        if (request.getCreateTimeStart() != null && !request.getCreateTimeStart().trim().isEmpty()) {
+            sql.append("AND create_time >= ? ");
+            params.add(request.getCreateTimeStart());
+        }
+        
+        // 创建时间范围查询 - 结束时间
+        if (request.getCreateTimeEnd() != null && !request.getCreateTimeEnd().trim().isEmpty()) {
+            sql.append("AND create_time <= ? ");
+            params.add(request.getCreateTimeEnd());
+        }
+        
+        Long count = jdbcTemplate.queryForObject(sql.toString(), params.toArray(new Object[0]), Long.class);
+        return count != null ? count : 0;
+    }
+    
+    /**
+     * Wiki 行映射器
+     * 将 ResultSet 转换为 Wiki 对象
+     */
+    private static class WikiRowMapper implements org.springframework.jdbc.core.RowMapper<Wiki> {
+        @Override
+        public Wiki mapRow(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
+            Wiki wiki = new Wiki();
+            wiki.setWikiId(rs.getLong("wiki_id"));
+            wiki.setKeyName(rs.getString("key_name"));
+            wiki.setTexts(rs.getString("texts"));
+            
+            // 处理 PostgreSQL 数组类型
+            java.sql.Array sqlArray = rs.getArray("tags");
+            if (sqlArray != null) {
+                wiki.setTags((String[]) sqlArray.getArray());
+            }
+            
+            wiki.setVersion(rs.getDouble("version"));
+            
+            // 处理 Timestamp 转换为 LocalDateTime
+            java.sql.Timestamp createTime = rs.getTimestamp("create_time");
+            if (createTime != null) {
+                wiki.setCreateTime(createTime.toLocalDateTime());
+            }
+            
+            wiki.setCreateUser(rs.getString("create_user"));
+            
+            java.sql.Timestamp updateTime = rs.getTimestamp("update_time");
+            if (updateTime != null) {
+                wiki.setUpdateTime(updateTime.toLocalDateTime());
+            }
+            
+            wiki.setUpdateUser(rs.getString("update_user"));
+            
+            return wiki;
+        }
     }
 }
