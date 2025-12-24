@@ -22,34 +22,36 @@ public class MybatisPlusConfig {
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
-        // 尝试通过反射添加分页插件（兼容没有该类或类签名变化的情况）
+        // 直接使用反射加载分页插件（支持 3.5.x 版本）
         try {
-            Class<?> paginationClass = Class.forName("com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor");
-            Object paginationInstance = null;
-            try {
-                // 优先尝试带 DbType 的构造函数
-                paginationInstance = paginationClass.getConstructor(com.baomidou.mybatisplus.annotation.DbType.class).newInstance(DbType.MYSQL);
-            } catch (NoSuchMethodException ex) {
-                // 回退到无参构造
-                paginationInstance = paginationClass.getDeclaredConstructor().newInstance();
-            }
-
-            // 通过反射找到 addInnerInterceptor 方法并调用
-            for (java.lang.reflect.Method m : MybatisPlusInterceptor.class.getMethods()) {
-                if (m.getName().equals("addInnerInterceptor") && m.getParameterCount() == 1) {
-                    m.invoke(interceptor, paginationInstance);
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ignored) {
-            // mybatis-plus 版本不包含 PaginationInnerInterceptor，跳过分页插件
+            // 加载 PaginationInnerInterceptor 类
+            Class<?> paginationInnerInterceptorClass = 
+                Class.forName("com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor");
+            
+            // 获取构造函数 PaginationInnerInterceptor(DbType dbType)
+            java.lang.reflect.Constructor<?> constructor = 
+                paginationInnerInterceptorClass.getDeclaredConstructor(DbType.class);
+            
+            // 实例化为 PostgreSQL 类型
+            Object paginationInstance = constructor.newInstance(DbType.POSTGRE_SQL);
+            
+            // 调用 setMaxLimit 方法
+            java.lang.reflect.Method setMaxLimitMethod = 
+                paginationInnerInterceptorClass.getMethod("setMaxLimit", Long.TYPE);
+            setMaxLimitMethod.invoke(paginationInstance, 500L);
+            
+            // 添加到拦截器链
+            java.lang.reflect.Method addInnerInterceptorMethod = 
+                MybatisPlusInterceptor.class.getMethod("addInnerInterceptor", 
+                    Class.forName("com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor"));
+            addInnerInterceptorMethod.invoke(interceptor, paginationInstance);
+            
         } catch (Exception e) {
-            // 任何反射相关异常都记录并忽略以保持应用可启动
-            System.err.println("Failed to add PaginationInnerInterceptor via reflection: " + e.getMessage());
+            System.err.println("⚠️ 警告：无法加载 MyBatis-Plus 分页插件: " + e.getMessage());
+            e.printStackTrace();
         }
         return interceptor;
     }
-
     /**
      * 配置 SqlSessionFactory
      */
