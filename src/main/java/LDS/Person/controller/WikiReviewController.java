@@ -2,8 +2,10 @@ package LDS.Person.controller;
 
 import LDS.Person.config.BypassIpWhitelist;
 import LDS.Person.dto.request.WikiReviewCreateRequest;
+import LDS.Person.dto.request.WikiReviewPageQueryRequest;
 import LDS.Person.dto.request.WikiReviewUpdateRequest;
 import LDS.Person.dto.response.JsonResponse;
+import LDS.Person.dto.response.PageResponse;
 import LDS.Person.dto.response.WikiReviewResponse;
 import LDS.Person.service.WikiReviewService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -71,6 +73,24 @@ public class WikiReviewController {
         } catch (Exception e) {
             log.error("更新审核状态失败", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(JsonResponse.failure("系统错误"));
+        }
+    }
+
+    /**
+     * 分页查询 Wiki 审核记录
+     */
+    @PostMapping("/page")
+    @BypassIpWhitelist(reason = "分页查询 Wiki 审核记录")
+    @Operation(summary = "分页查询 Wiki 审核记录")
+    public ResponseEntity<PageResponse<WikiReviewResponse>> pageQuery(@RequestBody WikiReviewPageQueryRequest request) {
+        try {
+            log.info("分页查询 Wiki 审核 - Page: {}, PageSize: {}, Status: {}", 
+                request.getPage(), request.getPageSize(), request.getWikiStates());
+            PageResponse<WikiReviewResponse> response = wikiReviewService.pageQuery(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("分页查询审核记录失败", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

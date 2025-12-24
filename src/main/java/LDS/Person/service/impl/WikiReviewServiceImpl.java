@@ -1,7 +1,9 @@
 package LDS.Person.service.impl;
 
 import LDS.Person.dto.request.WikiReviewCreateRequest;
+import LDS.Person.dto.request.WikiReviewPageQueryRequest;
 import LDS.Person.dto.request.WikiReviewUpdateRequest;
+import LDS.Person.dto.response.PageResponse;
 import LDS.Person.dto.response.WikiReviewResponse;
 import LDS.Person.entity.WikiReview;
 import LDS.Person.repository.WikiReviewMapper;
@@ -13,6 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Wiki 审核服务实现类
@@ -56,6 +61,97 @@ public class WikiReviewServiceImpl implements WikiReviewService {
         }
 
         return convertToResponse(review);
+    }
+
+    @Override
+    public PageResponse<WikiReviewResponse> pageQuery(WikiReviewPageQueryRequest request) {
+        int page = request.getPage() != null && request.getPage() > 0 ? request.getPage() : 1;
+        int pageSize = request.getPageSize() != null && request.getPageSize() > 0 ? request.getPageSize() : 10;
+        if (pageSize > 100) pageSize = 100;
+
+        int offset = (page - 1) * pageSize;
+
+        long total = countByCondition(request);
+        List<WikiReview> list = selectPageList(request, offset, pageSize);
+
+        List<WikiReviewResponse> responses = list.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+
+        long totalPages = (total + pageSize - 1) / pageSize;
+        return new PageResponse<WikiReviewResponse>(page, pageSize, total, totalPages, responses);
+    }
+
+    /**
+     * 分页查询审核记录列表
+     */
+    private List<WikiReview> selectPageList(WikiReviewPageQueryRequest request, int offset, int pageSize) {
+        StringBuilder sql = new StringBuilder();
+        List<Object> params = new ArrayList<>();
+
+        sql.append("SELECT wikireview_id, wiki_id, texts, tags, version, update_time, update_user, wiki_states ");
+        sql.append("FROM wiki_review WHERE 1=1 ");
+
+        buildCondition(sql, params, request);
+
+        sql.append("ORDER BY update_time DESC ");
+        sql.append("LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add(offset);
+
+        return jdbcTemplate.query(sql.toString(), (rs, rowNum) -> {
+            WikiReview r = new WikiReview();
+            r.setWikireviewId(rs.getLong("wikireview_id"));
+            r.setWikiId(rs.getLong("wiki_id"));
+            r.setTexts(rs.getString("texts"));
+            java.sql.Array arr = rs.getArray("tags");
+            if (arr != null) {
+                r.setTags((String[]) arr.getArray());
+            }
+            r.setVersion(rs.getDouble("version"));
+            r.setUpdateTime(rs.getTimestamp("update_time").toLocalDateTime());
+            r.setUpdateUser(rs.getString("update_user"));
+            r.setWikiStates(rs.getInt("wiki_states"));
+            return r;
+        }, params.toArray(new Object[0]));
+    }
+
+    /**
+     * 统计符合条件的审核记录总数
+     */
+    private long countByCondition(WikiReviewPageQueryRequest request) {
+        StringBuilder sql = new StringBuilder();
+        List<Object> params = new ArrayList<>();
+
+        sql.append("SELECT COUNT(*) FROM wiki_review WHERE 1=1 ");
+
+        buildCondition(sql, params, request);
+
+        Long count = jdbcTemplate.queryForObject(sql.toString(), Long.class, params.toArray(new Object[0]));
+        return count != null ? count : 0;
+    }
+
+    /**
+     * 构建查询条件
+     */
+    private void buildCondition(StringBuilder sql, List<Object> params, WikiReviewPageQueryRequest request) {
+        // wiki_id 精确匹配
+        if (request.getWikiId() != null) {
+            sql.append("AND wiki_id = ? ");
+            params.add(request.getWikiId());
+        }
+
+        // wiki_states 精确匹配
+        if (request.getWikiStates() != null) {
+            sql.append("AND wiki_states = ? ");
+            params.add(request.getWikiStates());
+        }
+
+        // update_user 模糊匹配
+        if (request.getUpdateUser() != null && !request.getUpdateUser().trim().isEmpty()) {
+            sql.append("AND update_user ILIKE ? ");
+            params.add("%" + request.getUpdateUser().trim() + "%");
+        }
     }
 
     @Override

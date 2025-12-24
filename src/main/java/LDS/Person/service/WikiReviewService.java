@@ -1,7 +1,9 @@
 package LDS.Person.service;
 
 import LDS.Person.dto.request.WikiReviewCreateRequest;
+import LDS.Person.dto.request.WikiReviewPageQueryRequest;
 import LDS.Person.dto.request.WikiReviewUpdateRequest;
+import LDS.Person.dto.response.PageResponse;
 import LDS.Person.dto.response.WikiReviewResponse;
 
 /**
@@ -18,4 +20,9 @@ public interface WikiReviewService {
      * 更新审核状态
      */
     boolean updateReviewStatus(WikiReviewUpdateRequest request);
+
+    /**
+     * 分页查询审核记录
+     */
+    PageResponse<WikiReviewResponse> pageQuery(WikiReviewPageQueryRequest request);
 }
