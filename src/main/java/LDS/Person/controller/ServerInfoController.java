@@ -1,6 +1,7 @@
 package LDS.Person.controller;
 
 import LDS.Person.dto.request.ApiLogPageRequest;
+import LDS.Person.dto.response.ApiLogPageResponse;
 import LDS.Person.entity.ApiLog;
 import LDS.Person.service.ApiLogService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -42,35 +43,35 @@ public class ServerInfoController {
      */
     @PostMapping("/apilogs")
     @Operation(summary = "分页查询访问日志", description = "支持通过状态和时间段筛选")
-    public ResponseEntity<Map<String, Object>> getApiLogs(@RequestBody(required = false) ApiLogPageRequest request) {
-        Map<String, Object> response = new HashMap<>();
+    public ResponseEntity<ApiLogPageResponse> getApiLogs(@RequestBody(required = false) ApiLogPageRequest request) {
         try {
             // 如果请求体为空，创建默认请求对象
             if (request == null) {
                 request = new ApiLogPageRequest();
             }
             
+            log.info("📋 分页查询请求 - 页码: {}, 每页条数: {}, 状态: {}", 
+                request.getPageNum(), request.getPageSize(), request.getStates());
+            
             Page<ApiLog> pageResult = apiLogService.getApiLogPage(request);
             
-            Map<String, Object> data = new HashMap<>();
-            data.put("当前页", pageResult.getCurrent());
-            data.put("每页条数", pageResult.getSize());
-            data.put("总记录数", pageResult.getTotal());
-            data.put("总页数", pageResult.getPages());
-            data.put("列表", pageResult.getRecords());
-
-            response.put("状态码", 200);
-            response.put("消息", "✅ 日志查询成功");
-            response.put("数据", data);
-            response.put("时间戳", System.currentTimeMillis());
-
+            log.info("✅ 查询完成 - 返回记录数: {}, 总记录数: {}, 总页数: {}", 
+                pageResult.getRecords().size(), pageResult.getTotal(), pageResult.getPages());
+            
+            ApiLogPageResponse response = ApiLogPageResponse.success(
+                pageResult.getCurrent(),
+                pageResult.getSize(),
+                pageResult.getTotal(),
+                pageResult.getPages(),
+                pageResult.getRecords()
+            );
+            
             return ResponseEntity.ok(response);
+            
         } catch (Exception e) {
             log.error("❌ 查询访问日志失败", e);
-            response.put("状态码", 500);
-            response.put("消息", "查询失败: " + e.getMessage());
-            response.put("时间戳", System.currentTimeMillis());
-            return ResponseEntity.status(500).body(response);
+            ApiLogPageResponse errorResponse = ApiLogPageResponse.error(e.getMessage());
+            return ResponseEntity.status(500).body(errorResponse);
         }
     }
 
