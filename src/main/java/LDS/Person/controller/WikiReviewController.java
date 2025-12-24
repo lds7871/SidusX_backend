@@ -35,16 +35,17 @@ public class WikiReviewController {
     @PostMapping("/create")
     @BypassIpWhitelist(reason = "提交 Wiki 审核")
     @Operation(summary = "提交 Wiki 审核申请")
-    public ResponseEntity<WikiReviewResponse> createReview(@RequestBody WikiReviewCreateRequest request) {
+    public ResponseEntity<?> createReview(@RequestBody WikiReviewCreateRequest request) {
         try {
             log.info("提交 Wiki 审核 - WikiID: {}", request.getWikiId());
             WikiReviewResponse response = wikiReviewService.createReview(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(JsonResponse.failure(e.getMessage()));
         } catch (Exception e) {
             log.error("提交审核失败", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(JsonResponse.failure("提交审核失败: " + e.getMessage()));
         }
     }
 
@@ -54,7 +55,6 @@ public class WikiReviewController {
      * 状态 2: 拒绝
      */
     @PostMapping("/update-status")
-    @BypassIpWhitelist(reason = "更新 Wiki 审核状态")
     @Operation(summary = "更新 Wiki 审核状态")
     public ResponseEntity<JsonResponse> updateStatus(@RequestBody WikiReviewUpdateRequest request) {
         try {

@@ -48,17 +48,19 @@ public class WikiController {
      */
     @PostMapping("/create")
     @BypassIpWhitelist(reason = "Wiki 创建接口")
-    public ResponseEntity<WikiResponse> createWiki(@RequestBody WikiCreateRequest request) {
+    public ResponseEntity<?> createWiki(@RequestBody WikiCreateRequest request) {
         try {
             log.info("创建 Wiki - KeyName: {}", request.getKeyName());
             WikiResponse response = wikiService.createWiki(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException ex) {
             log.warn("Wiki 创建参数验证失败: {}", ex.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(JsonResponse.failure(ex.getMessage()));
         } catch (Exception ex) {
             log.error("Wiki 创建失败", ex);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(JsonResponse.failure("Wiki 创建失败: " + ex.getMessage()));
         }
     }
     
@@ -69,7 +71,6 @@ public class WikiController {
      * @return JSON 格式的删除结果
      */
     @DeleteMapping("/{wikiId}")
-    @BypassIpWhitelist(reason = "Wiki 删除接口")
     public ResponseEntity<JsonResponse> deleteWiki(@PathVariable Long wikiId) {
         try {
             log.info("删除 Wiki - ID: {}", wikiId);

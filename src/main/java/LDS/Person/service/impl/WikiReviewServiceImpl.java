@@ -75,7 +75,7 @@ public class WikiReviewServiceImpl implements WikiReviewService {
         }
 
         LocalDateTime now = LocalDateTime.now();
-        String updateUser = request.getUpdateUser() != null ? request.getUpdateUser() : DEFAULT_USER;
+        String updateUser = review.getUpdateUser(); // 从审核记录中获取提交时的用户
 
         // 2. 更新审核表状态
         int updateResult = wikiReviewMapper.updateReviewStatus(request.getWikireviewId(), request.getWikiStates(), now, updateUser);

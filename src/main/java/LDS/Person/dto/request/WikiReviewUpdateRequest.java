@@ -20,8 +20,4 @@ public class WikiReviewUpdateRequest {
     @JsonProperty("wiki_states")
     @Schema(description = "审核状态：1通过，2拒绝", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer wikiStates;
-
-    @JsonProperty("update_user")
-    @Schema(description = "执行审核的用户 ID")
-    private String updateUser;
 }
