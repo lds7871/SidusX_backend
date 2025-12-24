@@ -1,4 +1,4 @@
-#########################################################
+-- #########################################################
 -- 创建表 api_log                                         已创建
 CREATE TABLE api_log (
     id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -17,7 +17,7 @@ COMMENT ON COLUMN api_log.create_time IS '访问时间';
 -- 表注释
 COMMENT ON TABLE "api_log" IS '访问日志表';
 
-#########################################################
+-- 11111111111111111111111111111111111111111111111111111111111111111111111111
 -- 创建表 user
 CREATE TABLE "users" (
     user_id BIGSERIAL PRIMARY KEY,          -- 自增主键
@@ -43,12 +43,13 @@ COMMENT ON COLUMN "user".expired_time IS '登录过期时间';
 -- 表注释
 COMMENT ON TABLE "user" IS '用户信息表';
 
-#########################################################
--- 创建表 article
+-- 111111111111111111111111111111111111111111111111111111111111111111111
+-- 创建表 article                                         已创建
 CREATE TABLE article (
     article_id BIGSERIAL PRIMARY KEY,              -- 自增主键
     title VARCHAR(200) NOT NULL,                   -- 标题
     cover VARCHAR(300),                            -- 封面图片 URL或FileURI
+    info VARCHAR(500),                             -- 简介
     texts TEXT NOT NULL,                           -- 正文内容
     tags VARCHAR(200),                             -- 标签（可用逗号分隔）
     create_time TIMESTAMP NOT NULL DEFAULT NOW(),  -- 创建时间，默认当前时间
@@ -59,6 +60,7 @@ CREATE TABLE article (
 COMMENT ON COLUMN article.article_id IS '文章ID，自增主键';
 COMMENT ON COLUMN article.title IS '文章标题';
 COMMENT ON COLUMN article.cover IS '封面图片地址';
+COMMENT ON COLUMN article.info IS '文章简介';
 COMMENT ON COLUMN article.texts IS '文章正文内容';
 COMMENT ON COLUMN article.tags IS '文章标签（可用逗号分隔）';
 COMMENT ON COLUMN article.create_time IS '创建时间';
@@ -69,7 +71,7 @@ COMMENT ON TABLE article IS '文章表';
 
 
 
-#########################################################
+-- #########################################################
 -- 创建表 wiki                                           已创建
 CREATE TABLE wiki (
     wiki_id BIGSERIAL PRIMARY KEY,              -- 自增主键
@@ -98,7 +100,7 @@ COMMENT ON COLUMN wiki.update_user IS '更新用户id';
 COMMENT ON TABLE wiki IS 'Wiki内容表';
 
 
-#######################################################
+-- #######################################################
 -- 创建 wiki审核表                                        已创建
 CREATE TABLE wiki_review (
     wikireview_id BIGSERIAL PRIMARY KEY,              -- 自增主键
@@ -125,7 +127,7 @@ COMMENT ON COLUMN wiki_review.wiki_states IS '审核状态，0待审核，1通�
 COMMENT ON TABLE wiki_review IS 'Wiki审核内容表';
 
 
-#########################################################
+-- #########################################################
 -- 创建表 spacex_lunch
 CREATE TABLE spacex_lunch (
     lunch_id BIGSERIAL PRIMARY KEY,        -- 自增主键
@@ -152,7 +154,7 @@ COMMENT ON TABLE spacex_lunch IS '空叉航天任务表';
 
 
 
-#########################################################
+-- #########################################################
 -- 创建表 nasa_daily_image                                 已创建
 CREATE TABLE nasa_daily_image (
     apod_id BIGSERIAL PRIMARY KEY,        -- 自增主键
@@ -178,7 +180,7 @@ COMMENT ON TABLE nasa_daily_image IS 'APOD每日图片信息表';
 
 
 
-#########################################################
+-- #########################################################
 -- 创建表 api_raw_logs                                         已创建
 CREATE TABLE api_raw_logs (
                               api_raw_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -194,13 +196,13 @@ COMMENT ON COLUMN api_raw_logs.created_at IS '记录创建时间';
 COMMENT ON TABLE "api_raw_logs" IS 'API原始日志存储表';
 
 
-#########################################################
+-- #########################################################
 
 
 
 
-#########################################################
+-- #########################################################
 
 
 
-#########################################################
+-- #########################################################
