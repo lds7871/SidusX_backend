@@ -149,15 +149,23 @@ public class ApiLogFilter extends OncePerRequestFilter {
 
                 // 插入到 api_raw_logs 表（存为 JSONB）
                 try {
-                    String sql = "INSERT INTO api_raw_logs(raw_json) VALUES (?)";
+                    String sqlRaw = "INSERT INTO api_raw_logs(raw_json) VALUES (?)";
                     jdbcTemplate.update(connection -> {
-                        PreparedStatement ps = connection.prepareStatement(sql);
+                        PreparedStatement ps = connection.prepareStatement(sqlRaw);
                         PGobject jsonObj = new PGobject();
                         jsonObj.setType("jsonb");
                         jsonObj.setValue(jsonLog);
                         ps.setObject(1, jsonObj);
                         return ps;
                     });
+
+                    // 同时插入到 api_log 表（结构化数据）
+                    String sqlLog = "INSERT INTO api_log(ip, api, states) VALUES (?, ?, ?)";
+                    jdbcTemplate.update(sqlLog, 
+                        wrappedRequest.getRemoteAddr(), 
+                        wrappedRequest.getRequestURI(), 
+                        wrappedResponse.getStatus()
+                    );
                 } catch (Exception dbEx) {
                     logger.warn("Failed to save action log to database", dbEx);
                 }

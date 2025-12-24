@@ -1,14 +1,15 @@
 package LDS.Person.controller;
 
+import LDS.Person.dto.request.ApiLogPageRequest;
+import LDS.Person.entity.ApiLog;
+import LDS.Person.service.ApiLogService;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
@@ -29,6 +30,44 @@ import java.util.Map;
 public class ServerInfoController {
 
     private static final Logger log = LoggerFactory.getLogger(ServerInfoController.class);
+
+    private final ApiLogService apiLogService;
+
+    public ServerInfoController(ApiLogService apiLogService) {
+        this.apiLogService = apiLogService;
+    }
+
+    /**
+     * 分页查询访问日志
+     */
+    @PostMapping("/apilogs")
+    @Operation(summary = "分页查询访问日志", description = "支持通过状态和时间段筛选")
+    public ResponseEntity<Map<String, Object>> getApiLogs(@RequestBody ApiLogPageRequest request) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Page<ApiLog> pageResult = apiLogService.getApiLogPage(request);
+            
+            Map<String, Object> data = new HashMap<>();
+            data.put("当前页", pageResult.getCurrent());
+            data.put("每页条数", pageResult.getSize());
+            data.put("总记录数", pageResult.getTotal());
+            data.put("总页数", pageResult.getPages());
+            data.put("列表", pageResult.getRecords());
+
+            response.put("状态码", 200);
+            response.put("消息", "日志查询成功");
+            response.put("数据", data);
+            response.put("时间戳", System.currentTimeMillis());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("查询访问日志失败", e);
+            response.put("状态码", 500);
+            response.put("消息", "查询失败: " + e.getMessage());
+            response.put("时间戳", System.currentTimeMillis());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
 
     /**
      * 获取完整的 JVM 和系统概览
