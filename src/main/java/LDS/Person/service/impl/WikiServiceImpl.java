@@ -139,7 +139,7 @@ public class WikiServiceImpl implements WikiService {
         if (page == null || page < 1) {
             page = 1;
         }
-        if (pageSize == null || pageSize < 1) {
+        if (pageSize == null || pageSize < 10) {
             pageSize = 10;
         }
         if (pageSize > 100) {
@@ -244,13 +244,13 @@ public class WikiServiceImpl implements WikiService {
         
         // 创建时间范围查询 - 开始时间
         if (request.getCreateTimeStart() != null && !request.getCreateTimeStart().trim().isEmpty()) {
-            sql.append("AND create_time >= ? ");
+            sql.append("AND create_time >= ?::timestamp ");
             params.add(request.getCreateTimeStart());
         }
         
         // 创建时间范围查询 - 结束时间
         if (request.getCreateTimeEnd() != null && !request.getCreateTimeEnd().trim().isEmpty()) {
-            sql.append("AND create_time <= ? ");
+            sql.append("AND create_time <= ?::timestamp ");
             params.add(request.getCreateTimeEnd());
         }
         
@@ -286,13 +286,13 @@ public class WikiServiceImpl implements WikiService {
         
         // 创建时间范围查询 - 开始时间
         if (request.getCreateTimeStart() != null && !request.getCreateTimeStart().trim().isEmpty()) {
-            sql.append("AND create_time >= ? ");
+            sql.append("AND create_time >= ?::timestamp ");
             params.add(request.getCreateTimeStart());
         }
         
         // 创建时间范围查询 - 结束时间
         if (request.getCreateTimeEnd() != null && !request.getCreateTimeEnd().trim().isEmpty()) {
-            sql.append("AND create_time <= ? ");
+            sql.append("AND create_time <= ?::timestamp ");
             params.add(request.getCreateTimeEnd());
         }
         
