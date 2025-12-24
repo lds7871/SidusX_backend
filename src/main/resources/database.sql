@@ -70,7 +70,7 @@ COMMENT ON TABLE article IS '文章表';
 
 
 #########################################################
--- 创建表 wiki
+-- 创建表 wiki                                           已创建
 CREATE TABLE wiki (
     wiki_id BIGSERIAL PRIMARY KEY,              -- 自增主键
     key_name VARCHAR(200) NOT NULL UNIQUE,             -- 唯一键名（必须唯一）
@@ -90,15 +90,16 @@ COMMENT ON COLUMN wiki.texts IS 'Wiki内容文本';
 COMMENT ON COLUMN wiki.tags IS '标签';
 COMMENT ON COLUMN wiki.version IS '版本号';
 COMMENT ON COLUMN wiki.create_time IS '创建时间';
-COMMENT ON COLUMN wiki.create_user IS '创建用户';
+COMMENT ON COLUMN wiki.create_user IS '创建用户id';
 COMMENT ON COLUMN wiki.update_time IS '更新时间';
-COMMENT ON COLUMN wiki.update_user IS '更新用户';
+COMMENT ON COLUMN wiki.update_user IS '更新用户id';
 
 -- 表注释
 COMMENT ON TABLE wiki IS 'Wiki内容表';
 
+
 #######################################################
--- 创建 wiki审核表
+-- 创建 wiki审核表                                        已创建
 CREATE TABLE wiki_review (
     wikireview_id BIGSERIAL PRIMARY KEY,              -- 自增主键
     wiki_id BIGINT NOT NULL REFERENCES wiki(wiki_id) ON DELETE CASCADE, -- 关联wiki表
@@ -117,7 +118,7 @@ COMMENT ON COLUMN wiki_review.texts IS 'Wiki审核内容文本';
 COMMENT ON COLUMN wiki_review.tags IS '标签';
 COMMENT ON COLUMN wiki_review.version IS '版本号';
 COMMENT ON COLUMN wiki_review.update_time IS '更新时间';
-COMMENT ON COLUMN wiki_review.update_user IS '更新用户';
+COMMENT ON COLUMN wiki_review.update_user IS '更新用户id';
 COMMENT ON COLUMN wiki_review.wiki_states IS '审核状态，0待审核，1通过，2拒绝';
 
 -- 表注释
