@@ -1,14 +1,19 @@
 package LDS.Person.controller;
 
-import LDS.Person.dto.request.ApiLogPageRequest;
-import LDS.Person.dto.response.ApiLogPageResponse;
+
 import LDS.Person.entity.ApiLog;
-import LDS.Person.service.ApiLogService;
+import LDS.Person.repository.ApiLogMapper;
+import LDS.Person.dto.request.ApiLogQueryRequest;
+import LDS.Person.dto.response.ApiLogPageResponse;
+import LDS.Person.dto.response.ApiLogResponse;
+import LDS.Person.dto.response.ApiLogResultResponse;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,6 +23,7 @@ import java.lang.management.MemoryUsage;
 import java.lang.management.ThreadMXBean;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,48 +38,8 @@ public class ServerInfoController {
 
     private static final Logger log = LoggerFactory.getLogger(ServerInfoController.class);
 
-    private final ApiLogService apiLogService;
-
-    public ServerInfoController(ApiLogService apiLogService) {
-        this.apiLogService = apiLogService;
-    }
-
-    /**
-     * 分页查询访问日志
-     */
-    @PostMapping("/apilogs")
-    @Operation(summary = "分页查询访问日志", description = "支持通过状态和时间段筛选")
-    public ResponseEntity<ApiLogPageResponse> getApiLogs(@RequestBody(required = false) ApiLogPageRequest request) {
-        try {
-            // 如果请求体为空，创建默认请求对象
-            if (request == null) {
-                request = new ApiLogPageRequest();
-            }
-            
-            log.info("📋 分页查询请求 - 页码: {}, 每页条数: {}, 状态: {}", 
-                request.getPageNum(), request.getPageSize(), request.getStates());
-            
-            Page<ApiLog> pageResult = apiLogService.getApiLogPage(request);
-            
-            log.info("✅ 查询完成 - 返回记录数: {}, 总记录数: {}, 总页数: {}", 
-                pageResult.getRecords().size(), pageResult.getTotal(), pageResult.getPages());
-            
-            ApiLogPageResponse response = ApiLogPageResponse.success(
-                pageResult.getCurrent(),
-                pageResult.getSize(),
-                pageResult.getTotal(),
-                pageResult.getPages(),
-                pageResult.getRecords()
-            );
-            
-            return ResponseEntity.ok(response);
-            
-        } catch (Exception e) {
-            log.error("❌ 查询访问日志失败", e);
-            ApiLogPageResponse errorResponse = ApiLogPageResponse.error(e.getMessage());
-            return ResponseEntity.status(500).body(errorResponse);
-        }
-    }
+    @Autowired
+    private ApiLogMapper apiLogMapper;
 
     /**
      * 获取完整的 JVM 和系统概览
@@ -187,6 +153,86 @@ public class ServerInfoController {
             response.put("message", "获取失败: " + e.getMessage());
             response.put("timestamp", System.currentTimeMillis());
             return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * 分页查询API访问日志
+     * 支持按状态和时间范围筛选
+     */
+    @PostMapping("/apilog")
+    @Operation(summary = "分页查询API日志", description = "支持按状态和时间范围查询API访问日志")
+    public ResponseEntity<ApiLogResultResponse> queryApiLog(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "日志查询条件")
+            @RequestBody ApiLogQueryRequest queryRequest) {
+        
+        try {
+            // 设置默认值
+            Integer pageNum = queryRequest.getPageNum() != null ? queryRequest.getPageNum() : 1;
+            Integer pageSize = queryRequest.getPageSize() != null ? queryRequest.getPageSize() : 10;
+            
+            // 创建分页对象
+            Page<ApiLog> page = new Page<>(pageNum, pageSize);
+            
+            // 创建查询条件
+            QueryWrapper<ApiLog> queryWrapper = new QueryWrapper<>();
+            
+            // 按状态码筛选
+            if (queryRequest.getStates() != null) {
+                queryWrapper.eq("states", queryRequest.getStates());
+            }
+            
+            // 按时间范围筛选
+            if (queryRequest.getStartTime() != null && !queryRequest.getStartTime().isEmpty()) {
+                queryWrapper.ge("create_time", LocalDateTime.parse(queryRequest.getStartTime().replace(" ", "T")));
+            }
+            if (queryRequest.getEndTime() != null && !queryRequest.getEndTime().isEmpty()) {
+                queryWrapper.le("create_time", LocalDateTime.parse(queryRequest.getEndTime().replace(" ", "T")));
+            }
+            
+            // 按时间倒序排列
+            queryWrapper.orderByDesc("create_time");
+            
+            // 执行分页查询
+            Page<ApiLog> result = apiLogMapper.selectPage(page, queryWrapper);
+            
+            // 转换为响应DTO
+            java.util.List<ApiLogResponse> logResponses = result.getRecords().stream()
+                    .map(log -> {
+                        ApiLogResponse response = new ApiLogResponse();
+                        response.setId(log.getId());
+                        response.setIp(log.getIp());
+                        response.setApi(log.getApi());
+                        response.setStates(log.getStates());
+                        response.setCreateTime(log.getCreateTime());
+                        return response;
+                    })
+                    .collect(java.util.stream.Collectors.toList());
+            
+            ApiLogPageResponse pageResponse = new ApiLogPageResponse(
+                    result.getTotal(),
+                    result.getPages(),
+                    result.getCurrent(),
+                    result.getSize(),
+                    logResponses
+            );
+            
+            ApiLogResultResponse resultResponse = ApiLogResultResponse.builder()
+                    .code(200)
+                    .message("✅ 日志查询成功")
+                    .data(pageResponse)
+                    .timestamp(System.currentTimeMillis())
+                    .build();
+            
+            return ResponseEntity.ok(resultResponse);
+        } catch (Exception e) {
+            log.error("❌ 日志查询失败", e);
+            ApiLogResultResponse errorResponse = ApiLogResultResponse.builder()
+                    .code(500)
+                    .message("查询失败: " + e.getMessage())
+                    .timestamp(System.currentTimeMillis())
+                    .build();
+            return ResponseEntity.status(500).body(errorResponse);
         }
     }
 }
