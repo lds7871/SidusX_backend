@@ -1,6 +1,5 @@
 package LDS.Person.config;
 
-import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -22,7 +21,7 @@ public class MybatisPlusConfig {
     private static final Logger logger = LoggerFactory.getLogger(MybatisPlusConfig.class);
 
     /**
-     * MyBatis-Plus 分页插件 - 使用反射兼容不同版本
+     * MyBatis-Plus 拦截器配置
      */
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
@@ -30,44 +29,33 @@ public class MybatisPlusConfig {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
         
         try {
-            // 加载分页拦截器类
+            // 通过反射动态加载 PaginationInnerInterceptor
             Class<?> paginationClass = Class.forName(
                 "com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor");
             
-            // 尝试用 DbType 参数构造
-            Object pagination = null;
-            try {
-                java.lang.reflect.Constructor<?> constructor = 
-                    paginationClass.getConstructor(DbType.class);
-                pagination = constructor.newInstance(DbType.POSTGRE_SQL);
-                logger.info("✅ 使用 DbType 参数创建 PaginationInnerInterceptor");
-            } catch (NoSuchMethodException e) {
-                // 如果没有该构造函数，尝试无参构造
-                pagination = paginationClass.getDeclaredConstructor().newInstance();
-                logger.info("✅ 使用无参构造创建 PaginationInnerInterceptor");
-            }
+            // 获取 DbType 枚举类
+            Class<?> dbTypeClass = Class.forName("com.baomidou.mybatisplus.annotation.DbType");
+            Object postgreSqlType = dbTypeClass.getField("POSTGRE_SQL").get(null);
             
-            // 设置 MaxLimit
-            try {
-                java.lang.reflect.Method setMaxLimitMethod = 
-                    paginationClass.getMethod("setMaxLimit", Long.TYPE);
-                setMaxLimitMethod.invoke(pagination, 20L);
-                logger.info("✅ 设置分页最大记录数: 20");
-            } catch (NoSuchMethodException e) {
-                logger.warn("⚠️ setMaxLimit 方法不存在，跳过设置");
-            }
+            // 通过反射创建 PaginationInnerInterceptor 实例
+            Object pagination = paginationClass.getConstructor(dbTypeClass)
+                .newInstance(postgreSqlType);
             
-            // 添加到拦截器
-            java.lang.reflect.Method addMethod = 
-                MybatisPlusInterceptor.class.getMethod("addInnerInterceptor",
-                    Class.forName("com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor"));
+            logger.info("✅ PaginationInnerInterceptor 创建成功");
+            
+            // 通过反射调用 addInnerInterceptor 方法
+            Class<?> innerInterceptorClass = Class.forName(
+                "com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor");
+            java.lang.reflect.Method addMethod = MybatisPlusInterceptor.class
+                .getMethod("addInnerInterceptor", innerInterceptorClass);
             addMethod.invoke(interceptor, pagination);
             
             logger.info("✅ 分页拦截器配置成功");
             
+        } catch (ClassNotFoundException e) {
+            logger.warn("⚠️ MyBatis-Plus 分页拦截器类未找到，请检查依赖: {}", e.getMessage());
         } catch (Exception e) {
             logger.error("❌ 分页拦截器配置失败: {}", e.getMessage());
-            e.printStackTrace();
         }
         
         return interceptor;

@@ -202,14 +202,14 @@ public class ServerInfoController {
             
             ApiLogSimpleResultResponse resultResponse = ApiLogSimpleResultResponse.builder()
                     .code(200)
-                    .message("✅ 日志查询成功")
+                    .message("日志查询成功")
                     .data(logResponses)
                     .timestamp(System.currentTimeMillis())
                     .build();
             
             return ResponseEntity.ok(resultResponse);
         } catch (Exception e) {
-            log.error("❌ 日志查询失败", e);
+            log.error(" 日志查询失败", e);
             ApiLogSimpleResultResponse errorResponse = ApiLogSimpleResultResponse.builder()
                     .code(500)
                     .message("查询失败: " + e.getMessage())
