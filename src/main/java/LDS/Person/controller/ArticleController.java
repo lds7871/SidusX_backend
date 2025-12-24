@@ -12,6 +12,7 @@ import LDS.Person.entity.Article;
 import LDS.Person.dto.request.ArticleCreateRequest;
 import LDS.Person.dto.request.ArticleQueryRequest;
 import LDS.Person.dto.response.ArticleResponse;
+import LDS.Person.dto.response.ArticleListResponse;
 import LDS.Person.dto.response.ArticleResultResponse;
 import LDS.Person.dto.response.PageResponse;
 import LDS.Person.service.ArticleService;
@@ -36,17 +37,67 @@ public class ArticleController {
      * 支持按标题和标签模糊查询
      */
     @PostMapping("/query")
-    @Operation(summary = "分页查询文章", description = "支持按标题和标签进行模糊查询")
-    public ResponseEntity<PageResponse<ArticleResponse>> queryArticles(
+    @Operation(summary = "分页查询文章列表", description = "支持按标题和标签进行模糊查询，返回简化的文章信息")
+    public ResponseEntity<PageResponse<ArticleListResponse>> queryArticles(
             @RequestBody ArticleQueryRequest queryRequest) {
         try {
             logger.info("分页查询文章 - Page: {}, PageSize: {}, Title: {}, Tags: {}", 
                 queryRequest.getPageNum(), queryRequest.getPageSize(), queryRequest.getTitle(), queryRequest.getTags());
-            PageResponse<ArticleResponse> response = articleService.pageQuery(queryRequest);
+            PageResponse<ArticleListResponse> response = articleService.pageQuery(queryRequest);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.error("分页查询文章失败", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * 根据文章ID获取完整的文章内容
+     */
+    @GetMapping("/{articleId}")
+    @Operation(summary = "获取完整文章内容", description = "根据文章ID获取文章的完整信息，包括所有字段")
+    public ResponseEntity<ArticleResultResponse> getArticleById(
+            @PathVariable Long articleId) {
+        try {
+            logger.info("根据ID查询文章 - ArticleId: {}", articleId);
+            Article article = articleService.getById(articleId);
+            
+            if (article != null) {
+                // 转换为响应DTO
+                ArticleResponse response = new ArticleResponse();
+                response.setArticleId(article.getArticleId());
+                response.setTitle(article.getTitle());
+                response.setCover(article.getCover());
+                response.setInfo(article.getInfo());
+                response.setTexts(article.getTexts());
+                response.setTags(article.getTags());
+                response.setCreateTime(article.getCreateTime());
+                response.setUpdateTime(article.getUpdateTime());
+
+                ArticleResultResponse resultResponse = ArticleResultResponse.builder()
+                        .code(200)
+                        .message("✅ 查询成功")
+                        .data(response)
+                        .timestamp(System.currentTimeMillis())
+                        .build();
+
+                return ResponseEntity.ok(resultResponse);
+            } else {
+                ArticleResultResponse errorResponse = ArticleResultResponse.builder()
+                        .code(404)
+                        .message("文章不存在")
+                        .timestamp(System.currentTimeMillis())
+                        .build();
+                return ResponseEntity.status(404).body(errorResponse);
+            }
+        } catch (Exception e) {
+            logger.error("❌ 查询文章失败", e);
+            ArticleResultResponse errorResponse = ArticleResultResponse.builder()
+                    .code(500)
+                    .message("查询失败: " + e.getMessage())
+                    .timestamp(System.currentTimeMillis())
+                    .build();
+            return ResponseEntity.status(500).body(errorResponse);
         }
     }
 

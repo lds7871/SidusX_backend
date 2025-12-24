@@ -3,6 +3,7 @@ package LDS.Person.service.impl;
 import LDS.Person.entity.Article;
 import LDS.Person.dto.request.ArticleQueryRequest;
 import LDS.Person.dto.response.ArticleResponse;
+import LDS.Person.dto.response.ArticleListResponse;
 import LDS.Person.dto.response.PageResponse;
 import LDS.Person.repository.ArticleMapper;
 import LDS.Person.service.ArticleService;
@@ -112,7 +113,7 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public PageResponse<ArticleResponse> pageQuery(ArticleQueryRequest request) {
+    public PageResponse<ArticleListResponse> pageQuery(ArticleQueryRequest request) {
         int page = request.getPageNum() != null && request.getPageNum() > 0 ? request.getPageNum() : 1;
         int pageSize = request.getPageSize() != null && request.getPageSize() > 0 ? request.getPageSize() : 10;
         if (pageSize > 100) pageSize = 100;
@@ -120,20 +121,20 @@ public class ArticleServiceImpl implements ArticleService {
         int offset = (page - 1) * pageSize;
 
         long total = countByCondition(request);
-        List<ArticleResponse> list = selectPageList(request, offset, pageSize);
+        List<ArticleListResponse> list = selectPageList(request, offset, pageSize);
 
         long totalPages = (total + pageSize - 1) / pageSize;
-        return new PageResponse<ArticleResponse>(page, pageSize, total, totalPages, list);
+        return new PageResponse<ArticleListResponse>(page, pageSize, total, totalPages, list);
     }
 
     /**
      * 分页查询文章列表
      */
-    private List<ArticleResponse> selectPageList(ArticleQueryRequest request, int offset, int pageSize) {
+    private List<ArticleListResponse> selectPageList(ArticleQueryRequest request, int offset, int pageSize) {
         StringBuilder sql = new StringBuilder();
         ArrayList<Object> params = new ArrayList<>();
 
-        sql.append("SELECT article_id, title, cover, info, texts, tags, create_time, update_time ");
+        sql.append("SELECT article_id, cover, info, tags ");
         sql.append("FROM article WHERE 1=1 ");
 
         buildCondition(sql, params, request);
@@ -145,22 +146,11 @@ public class ArticleServiceImpl implements ArticleService {
 
         logger.info("✅ 分页查询文章 SQL: {}", sql);
         return jdbcTemplate.query(sql.toString(), (rs, rowNum) -> {
-            ArticleResponse response = new ArticleResponse();
+            ArticleListResponse response = new ArticleListResponse();
             response.setArticleId(rs.getLong("article_id"));
-            response.setTitle(rs.getString("title"));
             response.setCover(rs.getString("cover"));
             response.setInfo(rs.getString("info"));
-            response.setTexts(rs.getString("texts"));
             response.setTags(rs.getString("tags"));
-            
-            java.sql.Timestamp createTime = rs.getTimestamp("create_time");
-            if (createTime != null) {
-                response.setCreateTime(createTime.toLocalDateTime());
-            }
-            java.sql.Timestamp updateTime = rs.getTimestamp("update_time");
-            if (updateTime != null) {
-                response.setUpdateTime(updateTime.toLocalDateTime());
-            }
             return response;
         }, params.toArray(new Object[0]));
     }

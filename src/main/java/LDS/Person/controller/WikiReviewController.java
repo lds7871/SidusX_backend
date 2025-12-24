@@ -80,7 +80,6 @@ public class WikiReviewController {
      * 分页查询 Wiki 审核记录
      */
     @PostMapping("/page")
-    @BypassIpWhitelist(reason = "分页查询 Wiki 审核记录")
     @Operation(summary = "分页查询 Wiki 审核记录")
     public ResponseEntity<PageResponse<WikiReviewResponse>> pageQuery(@RequestBody WikiReviewPageQueryRequest request) {
         try {

@@ -3,6 +3,7 @@ package LDS.Person.service;
 import LDS.Person.entity.Article;
 import LDS.Person.dto.request.ArticleQueryRequest;
 import LDS.Person.dto.response.ArticleResponse;
+import LDS.Person.dto.response.ArticleListResponse;
 import LDS.Person.dto.response.PageResponse;
 
 import java.util.List;
@@ -24,12 +25,12 @@ public interface ArticleService {
     PageResponse<ArticleResponse> queryArticleByPage(Integer pageNum, Integer pageSize, String title, String tags);
 
     /**
-     * 分页查询文章（手动分页方式）
+     * 分页查询文章列表信息（简化版）
      *
      * @param request 查询请求
      * @return 分页响应
      */
-    PageResponse<ArticleResponse> pageQuery(ArticleQueryRequest request);
+    PageResponse<ArticleListResponse> pageQuery(ArticleQueryRequest request);
 
     /**
      * 新建文章
