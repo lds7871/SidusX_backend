@@ -17,12 +17,19 @@ public class ApiLogServiceImpl extends ServiceImpl<ApiLogMapper, ApiLog> impleme
 
     @Override
     public Page<ApiLog> getApiLogPage(ApiLogPageRequest request) {
-        Page<ApiLog> page = new Page<>(request.getPageNum(), request.getPageSize());
+        // 参数验证
+        if (request == null) {
+            request = new ApiLogPageRequest();
+        }
         
+        Integer pageNum = request.getPageNum() != null && request.getPageNum() > 0 ? request.getPageNum() : 1;
+        Integer pageSize = request.getPageSize() != null && request.getPageSize() > 0 ? request.getPageSize() : 10;
+        
+        Page<ApiLog> page = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<ApiLog> queryWrapper = new LambdaQueryWrapper<>();
         
         // 状态筛选
-        if (request.getStates() != null) {
+        if (request.getStates() != null && request.getStates() > 0) {
             queryWrapper.eq(ApiLog::getStates, request.getStates());
         }
         
@@ -34,7 +41,7 @@ public class ApiLogServiceImpl extends ServiceImpl<ApiLogMapper, ApiLog> impleme
             queryWrapper.le(ApiLog::getCreateTime, request.getEndTime());
         }
         
-        // 按时间倒序
+        // 按时间倒序排列
         queryWrapper.orderByDesc(ApiLog::getCreateTime);
         
         return this.page(page, queryWrapper);

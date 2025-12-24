@@ -42,9 +42,14 @@ public class ServerInfoController {
      */
     @PostMapping("/apilogs")
     @Operation(summary = "分页查询访问日志", description = "支持通过状态和时间段筛选")
-    public ResponseEntity<Map<String, Object>> getApiLogs(@RequestBody ApiLogPageRequest request) {
+    public ResponseEntity<Map<String, Object>> getApiLogs(@RequestBody(required = false) ApiLogPageRequest request) {
         Map<String, Object> response = new HashMap<>();
         try {
+            // 如果请求体为空，创建默认请求对象
+            if (request == null) {
+                request = new ApiLogPageRequest();
+            }
+            
             Page<ApiLog> pageResult = apiLogService.getApiLogPage(request);
             
             Map<String, Object> data = new HashMap<>();
@@ -55,13 +60,13 @@ public class ServerInfoController {
             data.put("列表", pageResult.getRecords());
 
             response.put("状态码", 200);
-            response.put("消息", "日志查询成功");
+            response.put("消息", "✅ 日志查询成功");
             response.put("数据", data);
             response.put("时间戳", System.currentTimeMillis());
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            log.error("查询访问日志失败", e);
+            log.error("❌ 查询访问日志失败", e);
             response.put("状态码", 500);
             response.put("消息", "查询失败: " + e.getMessage());
             response.put("时间戳", System.currentTimeMillis());
