@@ -173,9 +173,15 @@ public class IpWhitelistInterceptor implements HandlerInterceptor {
             return;
         }
 
+        // 不记录本地请求（127.0.0.1）
+        if ("127.0.0.1".equals(ip)) {
+            //log.debug("跳过记录本地请求 - IP: 127.0.0.1, API: {}", api);
+            return;
+        }
+
         // 不记录 favicon.ico 请求（静态资源，会产生大量日志噪音）
         if (api.equals("/favicon.ico")) {
-            log.debug("跳过记录 favicon.ico 请求");
+            //log.debug("跳过记录 favicon.ico 请求");
             return;
         }
 
