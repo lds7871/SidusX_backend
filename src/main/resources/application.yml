@@ -35,10 +35,25 @@ mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
+    # 启用缓存
+    cache-enabled: true
+    # 映射语句的缓存大小
+    lazy-loading-enabled: true
+    aggressive-lazy-loading: true
+    multiple-result-sets-enabled: true
+    use-generated-keys: true
+    default-executor-type: REUSE
+    default-statement-timeout: 30
   global-config:
     db-config:
       id-type: auto
       table-underline: true
+      insert-strategy: not_empty
+      update-strategy: not_empty
+      select-strategy: not_empty
+      logic-delete-field: deleted
+      logic-not-delete-value: 0
+      logic-delete-value: 1
 
 
 server:

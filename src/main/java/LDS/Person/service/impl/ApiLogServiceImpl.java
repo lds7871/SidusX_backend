@@ -25,7 +25,10 @@ public class ApiLogServiceImpl extends ServiceImpl<ApiLogMapper, ApiLog> impleme
         Integer pageNum = request.getPageNum() != null && request.getPageNum() > 0 ? request.getPageNum() : 1;
         Integer pageSize = request.getPageSize() != null && request.getPageSize() > 0 ? request.getPageSize() : 10;
         
+        // 构建分页对象
         Page<ApiLog> page = new Page<>(pageNum, pageSize);
+        
+        // 构建查询条件
         LambdaQueryWrapper<ApiLog> queryWrapper = new LambdaQueryWrapper<>();
         
         // 状态筛选
@@ -44,6 +47,7 @@ public class ApiLogServiceImpl extends ServiceImpl<ApiLogMapper, ApiLog> impleme
         // 按时间倒序排列
         queryWrapper.orderByDesc(ApiLog::getCreateTime);
         
-        return this.page(page, queryWrapper);
+        // 直接调用 baseMapper.selectPage 执行分页查询
+        return baseMapper.selectPage(page, queryWrapper);
     }
 }
