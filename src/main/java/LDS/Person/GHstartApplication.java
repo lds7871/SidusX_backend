@@ -3,14 +3,12 @@ package LDS.Person;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.mybatis.spring.annotation.MapperScan;
 
 /**
  * GHstart SpringBoot 启动应用类
  */
 @SpringBootApplication
 @EnableScheduling
-@MapperScan("LDS.Person.repository")
 public class GHstartApplication {
 
     public static void main(String[] args) {
