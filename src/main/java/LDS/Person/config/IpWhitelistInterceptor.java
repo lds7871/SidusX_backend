@@ -162,17 +162,20 @@ public class IpWhitelistInterceptor implements HandlerInterceptor {
      * states: 1 表示通过，0 表示拒绝
      * 
      * 优化逻辑：
-     * 1. 不记录 favicon.ico 和直接的 /error 请求
+     * 1. 不记录 favicon.ico 请求（静态资源，噪音太多）
      * 2. 对于 /error 请求，尝试合并之前的相关请求状态为失败
      * 3. 其他请求正常记录并缓存用于后续合并
+     * 4. 增强错误处理和日志记录，确保数据库操作成功
      */
     private void logAccess(String ip, String api, int states, HttpServletRequest request) {
         if (jdbcTemplate == null) {
+            log.warn("JdbcTemplate 未注入，无法记录访问日志 - ip: {}, api: {}, states: {}", ip, api, states);
             return;
         }
 
-        // 不记录 favicon.ico 请求
+        // 不记录 favicon.ico 请求（静态资源，会产生大量日志噪音）
         if (api.equals("/favicon.ico")) {
+            log.debug("跳过记录 favicon.ico 请求");
             return;
         }
 
@@ -193,10 +196,13 @@ public class IpWhitelistInterceptor implements HandlerInterceptor {
             // 缓存请求信息，用于后续可能的合并
             if (insertedId > 0) {
                 recentRequests.put(ip, new RecentRequest(detailedApi, System.currentTimeMillis(), insertedId));
+                log.debug("访问日志已保存到数据库 - ID: {}, IP: {}, API: {}, States: {}", insertedId, ip, api, states);
+            } else {
+                log.warn("访问日志保存失败，没有返回记录ID - IP: {}, API: {}, States: {}", ip, api, states);
             }
 
         } catch (Exception ex) {
-            log.error("记录访问日志失败 - ip: {}, api: {}, states: {}", ip, api, states, ex);
+            log.error("记录访问日志异常 - IP: {}, API: {}, States: {}", ip, api, states, ex);
         }
     }
 
@@ -485,7 +491,7 @@ public class IpWhitelistInterceptor implements HandlerInterceptor {
     private int insertLogRecord(String ip, String api, int states) {
         try {
             KeyHolder keyHolder = new GeneratedKeyHolder();
-            jdbcTemplate.update(connection -> {
+            int rowsAffected = jdbcTemplate.update(connection -> {
                 var ps = connection.prepareStatement(
                         "INSERT INTO api_log (ip, api, states, create_time) VALUES (?, ?, ?, CURRENT_TIMESTAMP)",
                         new String[] { "id" });
@@ -495,10 +501,22 @@ public class IpWhitelistInterceptor implements HandlerInterceptor {
                 return ps;
             }, keyHolder);
 
-            Number key = keyHolder.getKey();
-            return key != null ? key.intValue() : -1;
+            if (rowsAffected > 0) {
+                Number key = keyHolder.getKey();
+                int id = key != null ? key.intValue() : -1;
+                if (id > 0) {
+                    log.debug("数据库插入成功 - 记录ID: {}, IP: {}, States: {}", id, ip, states);
+                    return id;
+                } else {
+                    log.warn("数据库插入成功但未返回ID - IP: {}, States: {}", ip, states);
+                    return rowsAffected; // 返回影响行数作为成功标志
+                }
+            } else {
+                log.warn("数据库插入失败，没有行被插入 - IP: {}, API: {}", ip, api);
+                return -1;
+            }
         } catch (Exception ex) {
-            log.error("插入日志记录失败 - ip: {}, api: {}, states: {}", ip, api, states, ex);
+            log.error("插入日志记录异常 - IP: {}, API: {}, States: {}, 异常信息: {}", ip, api, states, ex.getMessage(), ex);
             return -1;
         }
     }
