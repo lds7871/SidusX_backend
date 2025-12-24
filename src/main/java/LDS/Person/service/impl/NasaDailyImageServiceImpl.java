@@ -4,7 +4,6 @@ import LDS.Person.entity.NasaDailyImage;
 import LDS.Person.repository.NasaDailyImageMapper;
 import LDS.Person.service.NasaDailyImageService;
 import LDS.Person.util.DeepSeekApiClient;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,13 +18,13 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * NASA APOD 每日图片信息服务实现类
  */
 @Service
-public class NasaDailyImageServiceImpl extends ServiceImpl<NasaDailyImageMapper, NasaDailyImage> 
-        implements NasaDailyImageService {
+public class NasaDailyImageServiceImpl implements NasaDailyImageService {
 
     private static final Logger logger = LoggerFactory.getLogger(NasaDailyImageServiceImpl.class);
 
@@ -33,8 +32,10 @@ public class NasaDailyImageServiceImpl extends ServiceImpl<NasaDailyImageMapper,
 
     private final ObjectMapper objectMapper;
     private final DeepSeekApiClient deepSeekClient;
+    private final NasaDailyImageMapper nasaDailyImageMapper;
 
-    public NasaDailyImageServiceImpl() {
+    public NasaDailyImageServiceImpl(NasaDailyImageMapper nasaDailyImageMapper) {
+        this.nasaDailyImageMapper = nasaDailyImageMapper;
         this.objectMapper = new ObjectMapper();
         this.deepSeekClient = initializeDeepSeekClient();
     }
@@ -112,6 +113,21 @@ public class NasaDailyImageServiceImpl extends ServiceImpl<NasaDailyImageMapper,
         }
 
         return response.body();
+    }
+
+    @Override
+    public boolean save(NasaDailyImage nasaDailyImage) {
+        return nasaDailyImageMapper.insert(nasaDailyImage) > 0;
+    }
+
+    @Override
+    public NasaDailyImage getById(Long apodId) {
+        return nasaDailyImageMapper.selectById(apodId);
+    }
+
+    @Override
+    public List<NasaDailyImage> list() {
+        return nasaDailyImageMapper.selectAll();
     }
 
     /**

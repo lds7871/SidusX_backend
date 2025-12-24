@@ -1,8 +1,5 @@
 package LDS.Person.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import LDS.Person.entity.Article;
 import LDS.Person.dto.request.ArticleQueryRequest;
 import LDS.Person.dto.response.ArticleResponse;
@@ -22,18 +19,20 @@ import java.util.List;
  * 文章服务实现类
  */
 @Service
-public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> implements ArticleService {
+public class ArticleServiceImpl implements ArticleService {
 
     private static final Logger logger = LoggerFactory.getLogger(ArticleServiceImpl.class);
 
     private final JdbcTemplate jdbcTemplate;
+    private final ArticleMapper articleMapper;
 
-    public ArticleServiceImpl(JdbcTemplate jdbcTemplate) {
+    public ArticleServiceImpl(JdbcTemplate jdbcTemplate, ArticleMapper articleMapper) {
         this.jdbcTemplate = jdbcTemplate;
+        this.articleMapper = articleMapper;
     }
 
     @Override
-    public Page<Article> queryArticleByPage(Integer pageNum, Integer pageSize, String title, String tags) {
+    public PageResponse<ArticleResponse> queryArticleByPage(Integer pageNum, Integer pageSize, String title, String tags) {
         try {
             // 设置默认值
             if (pageNum == null || pageNum < 1) {
@@ -43,31 +42,69 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                 pageSize = 10;
             }
 
-            // 创建分页对象
-            Page<Article> page = new Page<>(pageNum, pageSize);
+            // 计算偏移量
+            int offset = (pageNum - 1) * pageSize;
 
-            // 创建查询条件
-            QueryWrapper<Article> queryWrapper = new QueryWrapper<>();
+            // 构建查询条件
+            StringBuilder sql = new StringBuilder();
+            List<Object> params = new ArrayList<>();
+
+            sql.append("SELECT article_id, title, cover, info, texts, tags, create_time, update_time ");
+            sql.append("FROM article WHERE 1=1 ");
 
             // 按标题模糊查询
             if (title != null && !title.isEmpty()) {
-                queryWrapper.like("title", title);
+                sql.append("AND title LIKE ? ");
+                params.add("%" + title + "%");
             }
 
             // 按标签模糊查询
             if (tags != null && !tags.isEmpty()) {
-                queryWrapper.like("tags", tags);
+                sql.append("AND tags LIKE ? ");
+                params.add("%" + tags + "%");
             }
 
+            // 统计总数（使用相同的查询条件）
+            String countSql = sql.toString().replace(
+                "SELECT article_id, title, cover, info, texts, tags, create_time, update_time FROM article",
+                "SELECT COUNT(*) FROM article"
+            );
+            Long total = jdbcTemplate.queryForObject(countSql, Long.class, params.toArray(new Object[0]));
+            long totalCount = total != null ? total : 0;
+
             // 按更新时间倒序排列
-            queryWrapper.orderByDesc("update_time");
+            sql.append("ORDER BY update_time DESC ");
 
-            // 执行分页查询
+            // 分页查询
+            sql.append("LIMIT ? OFFSET ?");
+            params.add(pageSize);
+            params.add(offset);
+
             logger.info("✅ 开始分页查询文章，pageNum: {}, pageSize: {}, title: {}, tags: {}", pageNum, pageSize, title, tags);
-            Page<Article> result = this.page(page, queryWrapper);
-            logger.info("✅ 分页查询成功，查询到 {} 条记录", result.getTotal());
+            List<ArticleResponse> records = jdbcTemplate.query(sql.toString(), (rs, rowNum) -> {
+                ArticleResponse response = new ArticleResponse();
+                response.setArticleId(rs.getLong("article_id"));
+                response.setTitle(rs.getString("title"));
+                response.setCover(rs.getString("cover"));
+                response.setInfo(rs.getString("info"));
+                response.setTexts(rs.getString("texts"));
+                response.setTags(rs.getString("tags"));
 
-            return result;
+                java.sql.Timestamp createTime = rs.getTimestamp("create_time");
+                if (createTime != null) {
+                    response.setCreateTime(createTime.toLocalDateTime());
+                }
+                java.sql.Timestamp updateTime = rs.getTimestamp("update_time");
+                if (updateTime != null) {
+                    response.setUpdateTime(updateTime.toLocalDateTime());
+                }
+                return response;
+            }, params.toArray(new Object[0]));
+
+            logger.info("✅ 分页查询成功，查询到 {} 条记录", totalCount);
+
+            long totalPages = (totalCount + pageSize - 1) / pageSize;
+            return new PageResponse<>(pageNum, pageSize, totalCount, totalPages, records);
         } catch (Exception e) {
             logger.error("❌ 分页查询文章失败", e);
             throw new RuntimeException("查询失败: " + e.getMessage());
@@ -169,13 +206,34 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             article.setUpdateTime(now);
 
             logger.info("✅ 开始创建文章，标题: {}", article.getTitle());
-            boolean result = this.save(article);
+            int result = articleMapper.insert(article);
             logger.info("✅ 文章创建成功，文章ID: {}", article.getArticleId());
 
-            return result;
+            return result > 0;
         } catch (Exception e) {
             logger.error("❌ 创建文章失败", e);
             throw new RuntimeException("创建失败: " + e.getMessage());
         }
+    }
+
+    @Override
+    public Article getById(Long articleId) {
+        return articleMapper.selectById(articleId);
+    }
+
+    @Override
+    public boolean updateById(Article article) {
+        article.setUpdateTime(LocalDateTime.now());
+        return articleMapper.updateById(article) > 0;
+    }
+
+    @Override
+    public boolean removeById(Long articleId) {
+        return articleMapper.deleteById(articleId) > 0;
+    }
+
+    @Override
+    public List<Article> list() {
+        return articleMapper.selectAll();
     }
 }

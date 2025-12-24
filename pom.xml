@@ -89,18 +89,11 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!-- MyBatis-Plus (updated for Jakarta EE 11 / Spring Boot 4) -->
+        <!-- MyBatis (standard MyBatis for Spring Boot 4) -->
         <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
-            <version>3.5.10</version>
-        </dependency>
-
-        <!-- MyBatis-Plus Core Library -->
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus</artifactId>
-            <version>3.5.10</version>
+            <groupId>org.mybatis.spring.boot</groupId>
+            <artifactId>mybatis-spring-boot-starter</artifactId>
+            <version>3.0.4</version>
         </dependency>
 
         <!-- PostgreSQL 驱动 (updated for JDK 25 compatibility) -->
