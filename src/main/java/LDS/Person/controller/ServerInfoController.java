@@ -4,11 +4,9 @@ package LDS.Person.controller;
 import LDS.Person.entity.ApiLog;
 import LDS.Person.repository.ApiLogMapper;
 import LDS.Person.dto.request.ApiLogQueryRequest;
-import LDS.Person.dto.response.ApiLogPageResponse;
 import LDS.Person.dto.response.ApiLogResponse;
-import LDS.Person.dto.response.ApiLogResultResponse;
+import LDS.Person.dto.response.ApiLogSimpleResultResponse;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
@@ -157,23 +155,16 @@ public class ServerInfoController {
     }
 
     /**
-     * 分页查询API访问日志
+     * 查询最近20条API访问日志
      * 支持按状态和时间范围筛选
      */
     @PostMapping("/apilog")
-    @Operation(summary = "分页查询API日志", description = "支持按状态和时间范围查询API访问日志")
-    public ResponseEntity<ApiLogResultResponse> queryApiLog(
+    @Operation(summary = "查询最近20条API日志", description = "返回最近20条API访问日志，支持按状态和时间范围筛选")
+    public ResponseEntity<ApiLogSimpleResultResponse> queryApiLog(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "日志查询条件")
             @RequestBody ApiLogQueryRequest queryRequest) {
         
         try {
-            // 设置默认值
-            Integer pageNum = queryRequest.getPageNum() != null ? queryRequest.getPageNum() : 1;
-            Integer pageSize = queryRequest.getPageSize() != null ? queryRequest.getPageSize() : 10;
-            
-            // 创建分页对象
-            Page<ApiLog> page = new Page<>(pageNum, pageSize);
-            
             // 创建查询条件
             QueryWrapper<ApiLog> queryWrapper = new QueryWrapper<>();
             
@@ -190,14 +181,14 @@ public class ServerInfoController {
                 queryWrapper.le("create_time", LocalDateTime.parse(queryRequest.getEndTime().replace(" ", "T")));
             }
             
-            // 按时间倒序排列
-            queryWrapper.orderByDesc("create_time");
+            // 按时间倒序排列，只取最近20条
+            queryWrapper.orderByDesc("create_time").last("LIMIT 20");
             
-            // 执行分页查询
-            Page<ApiLog> result = apiLogMapper.selectPage(page, queryWrapper);
+            // 执行查询
+            java.util.List<ApiLog> logs = apiLogMapper.selectList(queryWrapper);
             
             // 转换为响应DTO
-            java.util.List<ApiLogResponse> logResponses = result.getRecords().stream()
+            java.util.List<ApiLogResponse> logResponses = logs.stream()
                     .map(log -> {
                         ApiLogResponse response = new ApiLogResponse();
                         response.setId(log.getId());
@@ -209,25 +200,17 @@ public class ServerInfoController {
                     })
                     .collect(java.util.stream.Collectors.toList());
             
-            ApiLogPageResponse pageResponse = new ApiLogPageResponse(
-                    result.getTotal(),
-                    result.getPages(),
-                    result.getCurrent(),
-                    result.getSize(),
-                    logResponses
-            );
-            
-            ApiLogResultResponse resultResponse = ApiLogResultResponse.builder()
+            ApiLogSimpleResultResponse resultResponse = ApiLogSimpleResultResponse.builder()
                     .code(200)
                     .message("✅ 日志查询成功")
-                    .data(pageResponse)
+                    .data(logResponses)
                     .timestamp(System.currentTimeMillis())
                     .build();
             
             return ResponseEntity.ok(resultResponse);
         } catch (Exception e) {
             log.error("❌ 日志查询失败", e);
-            ApiLogResultResponse errorResponse = ApiLogResultResponse.builder()
+            ApiLogSimpleResultResponse errorResponse = ApiLogSimpleResultResponse.builder()
                     .code(500)
                     .message("查询失败: " + e.getMessage())
                     .timestamp(System.currentTimeMillis())
