@@ -55,7 +55,7 @@ public class ApiLogFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        if (request.getRequestURI() == null || !request.getRequestURI().startsWith("/GHapi")) {
+        if (request.getRequestURI() == null || !request.getRequestURI().startsWith("/api")) {
             filterChain.doFilter(request, response);
             return;
         }

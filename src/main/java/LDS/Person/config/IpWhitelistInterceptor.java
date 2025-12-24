@@ -196,13 +196,13 @@ public class IpWhitelistInterceptor implements HandlerInterceptor {
             // 缓存请求信息，用于后续可能的合并
             if (insertedId > 0) {
                 recentRequests.put(ip, new RecentRequest(detailedApi, System.currentTimeMillis(), insertedId));
-                log.debug("访问日志已保存到数据库 - ID: {}, IP: {}, API: {}, States: {}", insertedId, ip, api, states);
+                //log.debug("访问日志已保存到数据库 - ID: {}, IP: {}, API: {}, States: {}", insertedId, ip, api, states);
             } else {
-                log.warn("访问日志保存失败，没有返回记录ID - IP: {}, API: {}, States: {}", ip, api, states);
+                log.warn("\n!!!访问日志保存失败，没有返回记录ID - IP: {}, API: {}, States: {}", ip, api, states);
             }
 
         } catch (Exception ex) {
-            log.error("记录访问日志异常 - IP: {}, API: {}, States: {}", ip, api, states, ex);
+            log.error("\n!!!记录访问日志异常 - IP: {}, API: {}, States: {}", ip, api, states, ex);
         }
     }
 
@@ -346,7 +346,7 @@ public class IpWhitelistInterceptor implements HandlerInterceptor {
         // 配置变化或首次访问，重新创建缓存
         lastTokenConfigHash = currentHash;
         cachedPassTokens = new HashSet<>(currentTokens);
-        log.debug("pass_token缓存已更新，当前token数量: {}", cachedPassTokens.size());
+        log.debug("\n\npass_token缓存已更新，当前token数量: {}\n\n", cachedPassTokens.size());
 
         return cachedPassTokens;
     }
@@ -385,7 +385,7 @@ public class IpWhitelistInterceptor implements HandlerInterceptor {
         // 配置变化或首次访问，重新创建缓存
         lastConfigHash = currentHash;
         cachedIpWhitelist = new HashSet<>(currentList);
-        log.debug("IP白名单缓存已更新，当前白名单: {}", cachedIpWhitelist);
+        log.debug("\n\nIP白名单缓存已更新，当前白名单: {}\n\n", cachedIpWhitelist);
 
         return cachedIpWhitelist;
     }
@@ -505,18 +505,18 @@ public class IpWhitelistInterceptor implements HandlerInterceptor {
                 Number key = keyHolder.getKey();
                 int id = key != null ? key.intValue() : -1;
                 if (id > 0) {
-                    log.debug("数据库插入成功 - 记录ID: {}, IP: {}, States: {}", id, ip, states);
+                    //log.debug("数据库插入成功 - 记录ID: {}, IP: {}, States: {}", id, ip, states);
                     return id;
                 } else {
-                    log.warn("数据库插入成功但未返回ID - IP: {}, States: {}", ip, states);
+                    log.warn("\n!!!数据库插入成功但未返回ID - IP: {}, States: {}", ip, states);
                     return rowsAffected; // 返回影响行数作为成功标志
                 }
             } else {
-                log.warn("数据库插入失败，没有行被插入 - IP: {}, API: {}", ip, api);
+                log.warn("\n!!!数据库插入失败，没有行被插入 - IP: {}, API: {}", ip, api);
                 return -1;
             }
         } catch (Exception ex) {
-            log.error("插入日志记录异常 - IP: {}, API: {}, States: {}, 异常信息: {}", ip, api, states, ex.getMessage(), ex);
+            log.error("\n!!!插入日志记录异常 - IP: {}, API: {}, States: {}, 异常信息: {}", ip, api, states, ex.getMessage(), ex);
             return -1;
         }
     }

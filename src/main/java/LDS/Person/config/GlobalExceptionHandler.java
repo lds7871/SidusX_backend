@@ -14,7 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 /**
  * 全局异常处理器
  * 用于处理未捕获的异常，并标记相关请求为失败状态
- * 同时将异常请求保存到 api_log 数据库表，确保所有异常也被记录
+ * 同时将 以/GHapi 为首的异常请求保存到 api_log 数据库表，确保所有异常也被记录
  */
 @ControllerAdvice
 public class GlobalExceptionHandler {

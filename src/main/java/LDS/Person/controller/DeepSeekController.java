@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
  * 提供调用DeepSeek AI模型的REST接口
  */
 @RestController
-@RequestMapping("/GHapi/deepseek")
+@RequestMapping("/api/deepseek")
 @Tag(name = "DeepSeek AI", description = "调用DeepSeek聊天补全API")
 //@CrossOrigin(origins = "*", maxAge = 3600)
 public class DeepSeekController {
