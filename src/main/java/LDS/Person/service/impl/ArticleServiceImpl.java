@@ -11,10 +11,12 @@ import LDS.Person.repository.ArticleMapper;
 import LDS.Person.service.ArticleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 文章服务实现类
@@ -23,6 +25,12 @@ import java.util.stream.Collectors;
 public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> implements ArticleService {
 
     private static final Logger logger = LoggerFactory.getLogger(ArticleServiceImpl.class);
+
+    private final JdbcTemplate jdbcTemplate;
+
+    public ArticleServiceImpl(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
     @Override
     public Page<Article> queryArticleByPage(Integer pageNum, Integer pageSize, String title, String tags) {
@@ -68,69 +76,87 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     @Override
     public PageResponse<ArticleResponse> pageQuery(ArticleQueryRequest request) {
-        try {
-            Integer pageNum = request.getPageNum();
-            Integer pageSize = request.getPageSize();
+        int page = request.getPageNum() != null && request.getPageNum() > 0 ? request.getPageNum() : 1;
+        int pageSize = request.getPageSize() != null && request.getPageSize() > 0 ? request.getPageSize() : 10;
+        if (pageSize > 100) pageSize = 100;
 
-            // 设置默认值
-            if (pageNum == null || pageNum < 1) {
-                pageNum = 1;
+        int offset = (page - 1) * pageSize;
+
+        long total = countByCondition(request);
+        List<ArticleResponse> list = selectPageList(request, offset, pageSize);
+
+        long totalPages = (total + pageSize - 1) / pageSize;
+        return new PageResponse<ArticleResponse>(page, pageSize, total, totalPages, list);
+    }
+
+    /**
+     * 分页查询文章列表
+     */
+    private List<ArticleResponse> selectPageList(ArticleQueryRequest request, int offset, int pageSize) {
+        StringBuilder sql = new StringBuilder();
+        ArrayList<Object> params = new ArrayList<>();
+
+        sql.append("SELECT article_id, title, cover, info, texts, tags, create_time, update_time ");
+        sql.append("FROM article WHERE 1=1 ");
+
+        buildCondition(sql, params, request);
+
+        sql.append("ORDER BY update_time DESC ");
+        sql.append("LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add(offset);
+
+        logger.info("✅ 分页查询文章 SQL: {}", sql);
+        return jdbcTemplate.query(sql.toString(), (rs, rowNum) -> {
+            ArticleResponse response = new ArticleResponse();
+            response.setArticleId(rs.getLong("article_id"));
+            response.setTitle(rs.getString("title"));
+            response.setCover(rs.getString("cover"));
+            response.setInfo(rs.getString("info"));
+            response.setTexts(rs.getString("texts"));
+            response.setTags(rs.getString("tags"));
+            
+            java.sql.Timestamp createTime = rs.getTimestamp("create_time");
+            if (createTime != null) {
+                response.setCreateTime(createTime.toLocalDateTime());
             }
-            if (pageSize == null || pageSize < 1) {
-                pageSize = 10;
+            java.sql.Timestamp updateTime = rs.getTimestamp("update_time");
+            if (updateTime != null) {
+                response.setUpdateTime(updateTime.toLocalDateTime());
             }
+            return response;
+        }, params.toArray(new Object[0]));
+    }
 
-            // 创建分页对象
-            Page<Article> page = new Page<>(pageNum, pageSize);
+    /**
+     * 统计符合条件的文章总数
+     */
+    private long countByCondition(ArticleQueryRequest request) {
+        StringBuilder sql = new StringBuilder();
+        ArrayList<Object> params = new ArrayList<>();
 
-            // 创建查询条件
-            QueryWrapper<Article> queryWrapper = new QueryWrapper<>();
+        sql.append("SELECT COUNT(*) FROM article WHERE 1=1 ");
 
-            // 按标题模糊查询
-            if (request.getTitle() != null && !request.getTitle().isEmpty()) {
-                queryWrapper.like("title", request.getTitle());
-            }
+        buildCondition(sql, params, request);
 
-            // 按标签模糊查询
-            if (request.getTags() != null && !request.getTags().isEmpty()) {
-                queryWrapper.like("tags", request.getTags());
-            }
+        Long count = jdbcTemplate.queryForObject(sql.toString(), Long.class, params.toArray(new Object[0]));
+        return count != null ? count : 0;
+    }
 
-            // 按更新时间倒序排列
-            queryWrapper.orderByDesc("update_time");
+    /**
+     * 构建查询条件
+     */
+    private void buildCondition(StringBuilder sql, ArrayList<Object> params, ArticleQueryRequest request) {
+        // title 模糊匹配
+        if (request.getTitle() != null && !request.getTitle().isEmpty()) {
+            sql.append("AND title LIKE ? ");
+            params.add("%" + request.getTitle() + "%");
+        }
 
-            // 执行分页查询
-            logger.info("✅ 开始分页查询文章，pageNum: {}, pageSize: {}, title: {}, tags: {}", 
-                pageNum, pageSize, request.getTitle(), request.getTags());
-            Page<Article> result = this.page(page, queryWrapper);
-            logger.info("✅ 分页查询成功，查询到 {} 条记录", result.getTotal());
-
-            // 转换为响应DTO
-            var articleResponses = result.getRecords().stream()
-                    .map(article -> {
-                        ArticleResponse response = new ArticleResponse();
-                        response.setArticleId(article.getArticleId());
-                        response.setTitle(article.getTitle());
-                        response.setCover(article.getCover());
-                        response.setInfo(article.getInfo());
-                        response.setTexts(article.getTexts());
-                        response.setTags(article.getTags());
-                        response.setCreateTime(article.getCreateTime());
-                        response.setUpdateTime(article.getUpdateTime());
-                        return response;
-                    })
-                    .collect(Collectors.toList());
-
-            return new PageResponse<ArticleResponse>(
-                    (int) result.getCurrent(),
-                    (int) result.getSize(),
-                    result.getTotal(),
-                    result.getPages(),
-                    articleResponses
-            );
-        } catch (Exception e) {
-            logger.error("❌ 分页查询文章失败", e);
-            throw new RuntimeException("查询失败: " + e.getMessage());
+        // tags 模糊匹配
+        if (request.getTags() != null && !request.getTags().isEmpty()) {
+            sql.append("AND tags::text LIKE ? ");
+            params.add("%" + request.getTags() + "%");
         }
     }
 
