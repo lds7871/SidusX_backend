@@ -1,23 +1,20 @@
 package LDS.Person.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import LDS.Person.entity.Article;
 import LDS.Person.dto.request.ArticleCreateRequest;
 import LDS.Person.dto.request.ArticleQueryRequest;
-import LDS.Person.dto.response.ArticlePageResponse;
 import LDS.Person.dto.response.ArticleResponse;
 import LDS.Person.dto.response.ArticleResultResponse;
+import LDS.Person.dto.response.PageResponse;
 import LDS.Person.service.ArticleService;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 文章控制器
@@ -40,58 +37,16 @@ public class ArticleController {
      */
     @PostMapping("/query")
     @Operation(summary = "分页查询文章", description = "支持按标题和标签进行模糊查询")
-    public ResponseEntity<ArticleResultResponse> queryArticles(
+    public ResponseEntity<PageResponse<ArticleResponse>> queryArticles(
             @RequestBody ArticleQueryRequest queryRequest) {
         try {
-            // 执行分页查询
-            Page<Article> page = articleService.queryArticleByPage(
-                    queryRequest.getPageNum(),
-                    queryRequest.getPageSize(),
-                    queryRequest.getTitle(),
-                    queryRequest.getTags()
-            );
-
-            // 转换为响应DTO
-            List<ArticleResponse> articles = page.getRecords().stream()
-                    .map(article -> {
-                        ArticleResponse response = new ArticleResponse();
-                        response.setArticleId(article.getArticleId());
-                        response.setTitle(article.getTitle());
-                        response.setCover(article.getCover());
-                        response.setInfo(article.getInfo());
-                        response.setTexts(article.getTexts());
-                        response.setTags(article.getTags());
-                        response.setCreateTime(article.getCreateTime());
-                        response.setUpdateTime(article.getUpdateTime());
-                        return response;
-                    })
-                    .collect(Collectors.toList());
-
-            // 构建分页响应
-            ArticlePageResponse pageResponse = new ArticlePageResponse(
-                    page.getTotal(),
-                    page.getPages(),
-                    page.getCurrent(),
-                    page.getSize(),
-                    articles
-            );
-
-            ArticleResultResponse resultResponse = ArticleResultResponse.builder()
-                    .code(200)
-                    .message("✅ 查询成功")
-                    .data(pageResponse)
-                    .timestamp(System.currentTimeMillis())
-                    .build();
-
-            return ResponseEntity.ok(resultResponse);
+            logger.info("分页查询文章 - Page: {}, PageSize: {}, Title: {}, Tags: {}", 
+                queryRequest.getPageNum(), queryRequest.getPageSize(), queryRequest.getTitle(), queryRequest.getTags());
+            PageResponse<ArticleResponse> response = articleService.pageQuery(queryRequest);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            logger.error("❌ 文章查询失败", e);
-            ArticleResultResponse errorResponse = ArticleResultResponse.builder()
-                    .code(500)
-                    .message("查询失败: " + e.getMessage())
-                    .timestamp(System.currentTimeMillis())
-                    .build();
-            return ResponseEntity.status(500).body(errorResponse);
+            logger.error("分页查询文章失败", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -103,6 +58,7 @@ public class ArticleController {
     public ResponseEntity<ArticleResultResponse> createArticle(
             @RequestBody ArticleCreateRequest createRequest) {
         try {
+            logger.info("创建文章 - Title: {}", createRequest.getTitle());
             // 转换请求DTO为实体
             Article article = new Article();
             article.setTitle(createRequest.getTitle());

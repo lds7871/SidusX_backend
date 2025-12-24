@@ -1,5 +1,6 @@
 package LDS.Person.config;
 
+import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -22,41 +23,13 @@ public class MybatisPlusConfig {
 
     /**
      * MyBatis-Plus 拦截器配置
+     * 直接配置PostgreSQL分页拦截器，无需反射
      */
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         logger.info("✅ 初始化 MyBatis-Plus 拦截器");
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
         
-        try {
-            // 通过反射动态加载 PaginationInnerInterceptor
-            Class<?> paginationClass = Class.forName(
-                "com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor");
-            
-            // 获取 DbType 枚举类
-            Class<?> dbTypeClass = Class.forName("com.baomidou.mybatisplus.annotation.DbType");
-            Object postgreSqlType = dbTypeClass.getField("POSTGRE_SQL").get(null);
-            
-            // 通过反射创建 PaginationInnerInterceptor 实例
-            Object pagination = paginationClass.getConstructor(dbTypeClass)
-                .newInstance(postgreSqlType);
-            
-            logger.info("✅ PaginationInnerInterceptor 创建成功");
-            
-            // 通过反射调用 addInnerInterceptor 方法
-            Class<?> innerInterceptorClass = Class.forName(
-                "com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor");
-            java.lang.reflect.Method addMethod = MybatisPlusInterceptor.class
-                .getMethod("addInnerInterceptor", innerInterceptorClass);
-            addMethod.invoke(interceptor, pagination);
-            
-            logger.info("✅ 分页拦截器配置成功");
-            
-        } catch (ClassNotFoundException e) {
-            logger.warn("⚠️ MyBatis-Plus 分页拦截器类未找到，请检查依赖: {}", e.getMessage());
-        } catch (Exception e) {
-            logger.error("❌ 分页拦截器配置失败: {}", e.getMessage());
-        }
         
         return interceptor;
     }

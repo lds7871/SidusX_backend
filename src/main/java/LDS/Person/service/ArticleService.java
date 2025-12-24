@@ -2,6 +2,9 @@ package LDS.Person.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import LDS.Person.entity.Article;
+import LDS.Person.dto.request.ArticleQueryRequest;
+import LDS.Person.dto.response.ArticleResponse;
+import LDS.Person.dto.response.PageResponse;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -19,6 +22,14 @@ public interface ArticleService extends IService<Article> {
      * @return 分页结果
      */
     Page<Article> queryArticleByPage(Integer pageNum, Integer pageSize, String title, String tags);
+
+    /**
+     * 分页查询文章（手动分页方式）
+     *
+     * @param request 查询请求
+     * @return 分页响应
+     */
+    PageResponse<ArticleResponse> pageQuery(ArticleQueryRequest request);
 
     /**
      * 新建文章

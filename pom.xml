@@ -93,7 +93,14 @@
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
-            <version>3.5.9</version>
+            <version>3.5.10</version>
+        </dependency>
+
+        <!-- MyBatis-Plus Core Library -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus</artifactId>
+            <version>3.5.10</version>
         </dependency>
 
         <!-- PostgreSQL 驱动 (updated for JDK 25 compatibility) -->

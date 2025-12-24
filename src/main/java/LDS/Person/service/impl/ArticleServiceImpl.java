@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import LDS.Person.entity.Article;
+import LDS.Person.dto.request.ArticleQueryRequest;
+import LDS.Person.dto.response.ArticleResponse;
+import LDS.Person.dto.response.PageResponse;
 import LDS.Person.repository.ArticleMapper;
 import LDS.Person.service.ArticleService;
 import org.slf4j.Logger;
@@ -11,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 /**
  * 文章服务实现类
@@ -56,6 +60,74 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             logger.info("✅ 分页查询成功，查询到 {} 条记录", result.getTotal());
 
             return result;
+        } catch (Exception e) {
+            logger.error("❌ 分页查询文章失败", e);
+            throw new RuntimeException("查询失败: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public PageResponse<ArticleResponse> pageQuery(ArticleQueryRequest request) {
+        try {
+            Integer pageNum = request.getPageNum();
+            Integer pageSize = request.getPageSize();
+
+            // 设置默认值
+            if (pageNum == null || pageNum < 1) {
+                pageNum = 1;
+            }
+            if (pageSize == null || pageSize < 1) {
+                pageSize = 10;
+            }
+
+            // 创建分页对象
+            Page<Article> page = new Page<>(pageNum, pageSize);
+
+            // 创建查询条件
+            QueryWrapper<Article> queryWrapper = new QueryWrapper<>();
+
+            // 按标题模糊查询
+            if (request.getTitle() != null && !request.getTitle().isEmpty()) {
+                queryWrapper.like("title", request.getTitle());
+            }
+
+            // 按标签模糊查询
+            if (request.getTags() != null && !request.getTags().isEmpty()) {
+                queryWrapper.like("tags", request.getTags());
+            }
+
+            // 按更新时间倒序排列
+            queryWrapper.orderByDesc("update_time");
+
+            // 执行分页查询
+            logger.info("✅ 开始分页查询文章，pageNum: {}, pageSize: {}, title: {}, tags: {}", 
+                pageNum, pageSize, request.getTitle(), request.getTags());
+            Page<Article> result = this.page(page, queryWrapper);
+            logger.info("✅ 分页查询成功，查询到 {} 条记录", result.getTotal());
+
+            // 转换为响应DTO
+            var articleResponses = result.getRecords().stream()
+                    .map(article -> {
+                        ArticleResponse response = new ArticleResponse();
+                        response.setArticleId(article.getArticleId());
+                        response.setTitle(article.getTitle());
+                        response.setCover(article.getCover());
+                        response.setInfo(article.getInfo());
+                        response.setTexts(article.getTexts());
+                        response.setTags(article.getTags());
+                        response.setCreateTime(article.getCreateTime());
+                        response.setUpdateTime(article.getUpdateTime());
+                        return response;
+                    })
+                    .collect(Collectors.toList());
+
+            return new PageResponse<ArticleResponse>(
+                    (int) result.getCurrent(),
+                    (int) result.getSize(),
+                    result.getTotal(),
+                    result.getPages(),
+                    articleResponses
+            );
         } catch (Exception e) {
             logger.error("❌ 分页查询文章失败", e);
             throw new RuntimeException("查询失败: " + e.getMessage());
