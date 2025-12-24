@@ -6,13 +6,13 @@ import LDS.Person.repository.ApiLogMapper;
 import LDS.Person.dto.request.ApiLogQueryRequest;
 import LDS.Person.dto.response.ApiLogResponse;
 import LDS.Person.dto.response.ApiLogSimpleResultResponse;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.management.ManagementFactory;
@@ -22,7 +22,9 @@ import java.lang.management.ThreadMXBean;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -38,6 +40,9 @@ public class ServerInfoController {
 
     @Autowired
     private ApiLogMapper apiLogMapper;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     /**
      * 获取完整的 JVM 和系统概览
@@ -165,27 +170,44 @@ public class ServerInfoController {
             @RequestBody ApiLogQueryRequest queryRequest) {
         
         try {
-            // 创建查询条件
-            QueryWrapper<ApiLog> queryWrapper = new QueryWrapper<>();
+            // 构建查询SQL
+            StringBuilder sql = new StringBuilder();
+            List<Object> params = new ArrayList<>();
+            
+            sql.append("SELECT id, ip, api, states, create_time FROM api_log WHERE 1=1 ");
             
             // 按状态码筛选
             if (queryRequest.getStates() != null) {
-                queryWrapper.eq("states", queryRequest.getStates());
+                sql.append("AND states = ? ");
+                params.add(queryRequest.getStates());
             }
             
             // 按时间范围筛选
             if (queryRequest.getStartTime() != null && !queryRequest.getStartTime().isEmpty()) {
-                queryWrapper.ge("create_time", LocalDateTime.parse(queryRequest.getStartTime().replace(" ", "T")));
+                sql.append("AND create_time >= ?::timestamp ");
+                params.add(queryRequest.getStartTime());
             }
             if (queryRequest.getEndTime() != null && !queryRequest.getEndTime().isEmpty()) {
-                queryWrapper.le("create_time", LocalDateTime.parse(queryRequest.getEndTime().replace(" ", "T")));
+                sql.append("AND create_time <= ?::timestamp ");
+                params.add(queryRequest.getEndTime());
             }
             
             // 按时间倒序排列，只取最近20条
-            queryWrapper.orderByDesc("create_time").last("LIMIT 20");
+            sql.append("ORDER BY create_time DESC LIMIT 20");
             
             // 执行查询
-            java.util.List<ApiLog> logs = apiLogMapper.selectList(queryWrapper);
+            java.util.List<ApiLog> logs = jdbcTemplate.query(sql.toString(), (rs, rowNum) -> {
+                ApiLog log = new ApiLog();
+                log.setId(rs.getInt("id"));
+                log.setIp(rs.getString("ip"));
+                log.setApi(rs.getString("api"));
+                log.setStates(rs.getInt("states"));
+                java.sql.Timestamp createTime = rs.getTimestamp("create_time");
+                if (createTime != null) {
+                    log.setCreateTime(createTime.toLocalDateTime());
+                }
+                return log;
+            }, params.toArray(new Object[0]));
             
             // 转换为响应DTO
             java.util.List<ApiLogResponse> logResponses = logs.stream()

@@ -1,8 +1,5 @@
 package LDS.Person.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,13 +12,11 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@TableName("nasa_daily_image")
 public class NasaDailyImage {
 
     /**
      * 图片记录ID，自增主键
      */
-    @TableId(value = "apod_id", type = IdType.AUTO)
     private Long apodId;
 
     /**

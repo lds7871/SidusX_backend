@@ -1,8 +1,5 @@
 package LDS.Person.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -12,11 +9,9 @@ import java.time.LocalDateTime;
  * 文章实体类
  */
 @Data
-@TableName("article")
 @Schema(description = "文章信息")
 public class Article {
 
-    @TableId(type = IdType.AUTO)
     @Schema(description = "文章ID，自增主键", example = "1")
     private Long articleId;
 
