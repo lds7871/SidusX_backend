@@ -74,9 +74,11 @@ COMMENT ON TABLE article IS '文章表';
 CREATE TABLE wiki (
     wiki_id BIGSERIAL PRIMARY KEY,              -- 自增主键
     key_name VARCHAR(200) NOT NULL UNIQUE,             -- 唯一键名（必须唯一）
-    texts VARCHAR(25500) NOT NULL,              -- 文本内容
-    tags VARCHAR(200),                          -- 标签
+    texts TEXT NOT NULL,              -- 文本内容
+    tags TEXT[],                          -- 标签
+    version NUMERIC(5, 2) NOT NULL DEFAULT 1.00,               -- 版本号，默认1
     create_time TIMESTAMP NOT NULL DEFAULT NOW(),  -- 创建时间
+    create_user VARCHAR(100),                  -- 创建用户
     update_time TIMESTAMP NOT NULL DEFAULT NOW(),  -- 更新时间
     update_user VARCHAR(100)                    -- 最后更新用户
 );
@@ -86,13 +88,40 @@ COMMENT ON COLUMN wiki.wiki_id IS 'Wiki ID，自增主键';
 COMMENT ON COLUMN wiki.key_name IS 'Wiki键名（建议唯一）';
 COMMENT ON COLUMN wiki.texts IS 'Wiki内容文本';
 COMMENT ON COLUMN wiki.tags IS '标签';
+COMMENT ON COLUMN wiki.version IS '版本号';
 COMMENT ON COLUMN wiki.create_time IS '创建时间';
+COMMENT ON COLUMN wiki.create_user IS '创建用户';
 COMMENT ON COLUMN wiki.update_time IS '更新时间';
-COMMENT ON COLUMN wiki.update_user IS '最后更新用户';
+COMMENT ON COLUMN wiki.update_user IS '更新用户';
 
 -- 表注释
 COMMENT ON TABLE wiki IS 'Wiki内容表';
 
+#######################################################
+-- 创建 wiki审核表
+CREATE TABLE wiki_review (
+    wikireview_id BIGSERIAL PRIMARY KEY,              -- 自增主键
+    wiki_id BIGINT NOT NULL REFERENCES wiki(wiki_id) ON DELETE CASCADE, -- 关联wiki表
+    texts TEXT NOT NULL,              -- 文本内容
+    tags TEXT[],                          -- 标签
+    version NUMERIC(5, 2) NOT NULL DEFAULT 1.00,               -- 版本号，默认1
+    update_time TIMESTAMP NOT NULL DEFAULT NOW(),  -- 更新时间
+    update_user VARCHAR(100)   ,                 -- 最后更新用户
+    wiki_states INTEGER NOT NULL DEFAULT 0          -- 审核状态，0待审核，1通过，2拒绝
+);
+
+-- 字段注释
+COMMENT ON COLUMN wiki_review.wikireview_id IS 'Wiki审核ID，自增主键';
+COMMENT ON COLUMN wiki_review.wiki_id IS '关联的Wiki ID';
+COMMENT ON COLUMN wiki_review.texts IS 'Wiki审核内容文本';
+COMMENT ON COLUMN wiki_review.tags IS '标签';
+COMMENT ON COLUMN wiki_review.version IS '版本号';
+COMMENT ON COLUMN wiki_review.update_time IS '更新时间';
+COMMENT ON COLUMN wiki_review.update_user IS '更新用户';
+COMMENT ON COLUMN wiki_review.wiki_states IS '审核状态，0待审核，1通过，2拒绝';
+
+-- 表注释
+COMMENT ON TABLE wiki_review IS 'Wiki审核内容表';
 
 
 #########################################################

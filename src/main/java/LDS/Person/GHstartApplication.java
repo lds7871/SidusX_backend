@@ -16,7 +16,7 @@ public class GHstartApplication {
     public static void main(String[] args) {
         SpringApplication.run(GHstartApplication.class, args);
         System.out.println("GHstart 应用启动成功！");
-        System.out.println("访问地址: http://localhost:8090");
+        System.out.println("访问地址: http://localhost:8100");
     }
 
 }

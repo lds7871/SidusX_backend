@@ -42,7 +42,7 @@ mybatis-plus:
 
 
 server:
-  port: 8090
+  port: 8100
   servlet:
     context-path: /
 
