@@ -184,12 +184,12 @@ public class ServerInfoController {
             
             // 按时间范围筛选
             if (queryRequest.getStartTime() != null && !queryRequest.getStartTime().isEmpty()) {
-                sql.append("AND create_time >= ?::timestamp ");
-                params.add(queryRequest.getStartTime());
+                sql.append("AND create_time >= ? ");
+                params.add(LocalDateTime.parse(queryRequest.getStartTime().replace(" ", "T")));
             }
             if (queryRequest.getEndTime() != null && !queryRequest.getEndTime().isEmpty()) {
-                sql.append("AND create_time <= ?::timestamp ");
-                params.add(queryRequest.getEndTime());
+                sql.append("AND create_time <= ? ");
+                params.add(LocalDateTime.parse(queryRequest.getEndTime().replace(" ", "T")));
             }
             
             // 按时间倒序排列，只取最近20条

@@ -64,15 +64,16 @@ public class ArticleServiceImpl implements ArticleService {
                 params.add("%" + tags + "%");
             }
 
-            // 按更新时间倒序排列
-            sql.append("ORDER BY update_time DESC ");
-
-            // 统计总数
-            String countSql = "SELECT COUNT(*) FROM article WHERE 1=1 " +
-                    (title != null && !title.isEmpty() ? "AND title LIKE ? " : "") +
-                    (tags != null && !tags.isEmpty() ? "AND tags LIKE ? " : "");
+            // 统计总数（使用相同的查询条件）
+            String countSql = sql.toString().replace(
+                "SELECT article_id, title, cover, info, texts, tags, create_time, update_time FROM article",
+                "SELECT COUNT(*) FROM article"
+            );
             Long total = jdbcTemplate.queryForObject(countSql, Long.class, params.toArray(new Object[0]));
             long totalCount = total != null ? total : 0;
+
+            // 按更新时间倒序排列
+            sql.append("ORDER BY update_time DESC ");
 
             // 分页查询
             sql.append("LIMIT ? OFFSET ?");
