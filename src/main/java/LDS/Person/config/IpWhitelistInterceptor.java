@@ -173,9 +173,9 @@ public class IpWhitelistInterceptor implements HandlerInterceptor {
             return;
         }
 
-        // 不记录本地请求（127.0.0.1）
-        if ("127.0.0.1".equals(ip)) {
-            //log.debug("跳过记录本地请求 - IP: 127.0.0.1, API: {}", api);
+        // 不记录本地请求（127.0.0.1 或 ::1）
+        if ("127.0.0.1".equals(ip) || "::1".equals(ip) || "0:0:0:0:0:0:0:1".equals(ip)) {
+            log.debug("跳过记录本地请求 - IP: {}, API: {}", ip, api);
             return;
         }
 

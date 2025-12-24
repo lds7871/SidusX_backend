@@ -159,13 +159,6 @@ public class ApiLogFilter extends OncePerRequestFilter {
                         return ps;
                     });
 
-                    // 同时插入到 api_log 表（结构化数据）
-                    String sqlLog = "INSERT INTO api_log(ip, api, states) VALUES (?, ?, ?)";
-                    jdbcTemplate.update(sqlLog, 
-                        wrappedRequest.getRemoteAddr(), 
-                        wrappedRequest.getRequestURI(), 
-                        wrappedResponse.getStatus()
-                    );
                 } catch (Exception dbEx) {
                     logger.warn("Failed to save action log to database", dbEx);
                 }
