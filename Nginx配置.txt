@@ -17,6 +17,24 @@ http {
     sendfile        on;
     keepalive_timeout  65;
 
+    # ==================== 全局限流和IP封禁配置 ====================
+    # 1. 定义限流键：本地IP映射为空字符串（Nginx会自动跳过空字符串的限流）
+    geo $limit_key {
+        default $remote_addr;
+        127.0.0.1 "";
+        ::1 "";
+        10.0.0.0/8 "";
+        172.16.0.0/12 "";
+        192.168.0.0/16 "";
+    }
+
+    # 2. 定义限流区域：基于 $limit_key 限流，每秒最多1个请求
+    limit_req_zone $limit_key zone=global_limit:10m rate=1r/s;
+
+    # 3. 定义连接限制区域（可选）
+    limit_conn_zone $limit_key zone=conn_limit:10m;
+    # ==================== 全局限流和IP封禁配置结束 ====================
+
     # 定义后端服务地址
     upstream app_backend {
         server 127.0.0.1:8090;  # X自动，QQ机器人 服务监听端口
@@ -35,6 +53,10 @@ http {
 
         # 仅允许以 /api 或 /GHapi 开头的请求代理到后端
         location ~ ^/(api|GHapi) {
+            # 应用全局限流（允许小规模突发以提高稳定性）
+            limit_req zone=global_limit burst=2 nodelay;
+            limit_req_status 429;
+
             proxy_pass http://app_backend;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
@@ -48,11 +70,11 @@ http {
 
         # 拒绝其他所有请求
         location / {
+            # 应用全局限流
+            limit_req zone=global_limit burst=2 nodelay;
+            limit_req_status 429;
             return 403 "弱智";
         }
-
-        # 可选：强制跳转到 HTTPS
-        # return 301 https://$host$request_uri;
     }
 
     # Vue 前端应用（HTTP）- 重定向到 HTTPS
@@ -107,6 +129,10 @@ http {
 
         # 仅允许以 /api 或 /GHapi 开头的请求代理到后端
         location ~ ^/(api|GHapi) {
+            # 应用全局限流
+            limit_req zone=global_limit burst=2 nodelay;
+            limit_req_status 429;
+
             proxy_pass http://app_backend;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
@@ -125,6 +151,9 @@ http {
 
         # 拒绝其他所有请求
         location / {
+            # 应用全局限流
+            limit_req zone=global_limit burst=2 nodelay;
+            limit_req_status 429;
             return 403 "弱智";
         }
     }
