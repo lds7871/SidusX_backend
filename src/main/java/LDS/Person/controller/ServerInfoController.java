@@ -236,4 +236,42 @@ public class ServerInfoController {
             return ResponseEntity.status(500).body(errorResponse);
         }
     }
+
+    /**
+     * 获取数据表统计信息
+     * 返回 wiki、article 和 nasa_daily_image 三个表的总记录数
+     */
+    @GetMapping("/table-count")
+    @Operation(summary = "获取数据表记录数", description = "返回 wiki、article 和 nasa_daily_image 三个表的总记录数")
+    public ResponseEntity<Map<String, Object>> getTableCount() {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Map<String, Object> counts = new HashMap<>();
+            
+            // 查询 wiki 表总数
+            Integer wikiCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM wiki", Integer.class);
+            counts.put("wiki表", wikiCount != null ? wikiCount : 0);
+            
+            // 查询 article 表总数
+            Integer articleCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM article", Integer.class);
+            counts.put("article表", articleCount != null ? articleCount : 0);
+            
+            // 查询 nasa_daily_image 表总数
+            Integer nasaDailyImageCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM nasa_daily_image", Integer.class);
+            counts.put("nasa_daily_image表", nasaDailyImageCount != null ? nasaDailyImageCount : 0);
+            
+            response.put("状态码", 200);
+            response.put("消息", "✅ 数据表统计信息获取成功");
+            response.put("数据", counts);
+            response.put("时间戳", System.currentTimeMillis());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("❌ 获取数据表统计信息失败", e);
+            response.put("状态码", 500);
+            response.put("消息", "获取失败: " + e.getMessage());
+            response.put("时间戳", System.currentTimeMillis());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
 }

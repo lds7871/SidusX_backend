@@ -4,6 +4,8 @@ import java.io.*;
 import java.nio.file.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
 /**
  * Nginx 日志管理工具
@@ -12,7 +14,10 @@ import java.time.format.DateTimeFormatter;
  * 2. 按当前日期重命名日志文件
  * 3. 删除原始日志文件
  * 4. 执行 Nginx 重启脚本
+ * 
+ * 定时任务：每晚 23:59 自动执行
  */
+@Component
 public class NginxLogManager {
 
     // ============ 静态路径配置 ============
@@ -38,9 +43,11 @@ public class NginxLogManager {
     // =====================================
 
     /**
-     * 主方法：执行完整的日志备份和重启流程
+     * 定时任务：每晚 23:59 执行 Nginx 日志备份和重启
+     * Cron 表达式: 0 59 23 * * * (秒 分 小时 日 月 周)
      */
-    public static void main(String[] args) {
+    @Scheduled(cron = "0 59 23 * * *")
+    public void executeScheduledTask() {
         try {
             System.out.println("[INFO] Nginx 日志管理流程开始...");
 
@@ -58,6 +65,14 @@ public class NginxLogManager {
             System.err.println("[ERROR] 执行过程中出现错误: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    /**
+     * 主方法：可用于手动测试
+     */
+    public static void main(String[] args) {
+        System.out.println("[WARN] 当前配置为定时任务模式（每晚23:59执行）");
+        System.out.println("[INFO] 如需立即执行，请使用应用程序的定时任务管理接口");
     }
 
     /**
