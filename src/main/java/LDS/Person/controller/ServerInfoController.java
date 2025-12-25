@@ -265,6 +265,10 @@ public class ServerInfoController {
             Integer nasaDailyImageCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM nasa_daily_image", Integer.class);
             counts.put("nasa_daily_image表", nasaDailyImageCount != null ? nasaDailyImageCount : 0);
             
+            // 查询 wiki_review 表总数
+            Integer wikiReviewCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM wiki_review", Integer.class);
+            counts.put("wiki_review表", wikiReviewCount != null ? wikiReviewCount : 0);
+            
             response.put("状态码", 200);
             response.put("消息", "✅ 数据表统计信息获取成功");
             response.put("数据", counts);
@@ -290,8 +294,8 @@ public class ServerInfoController {
             @RequestParam(value = "limit", defaultValue = "1000") int limit) {
         Map<String, Object> response = new HashMap<>();
         try {
-            // 动态获取当前日期
-            LocalDate currentDate = LocalDate.now();
+            // 动态获取前一天的日期
+            LocalDate currentDate = LocalDate.now().minusDays(1);
             String dateStr = currentDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
             String logFilePath = "C:\\Users\\Administrator\\Desktop\\ServerSync\\Nginx日志\\access(" + dateStr + ").log";
             
