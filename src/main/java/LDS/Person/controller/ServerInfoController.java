@@ -18,9 +18,14 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
 import java.lang.management.ThreadMXBean;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -270,6 +275,68 @@ public class ServerInfoController {
             log.error("❌ 获取数据表统计信息失败", e);
             response.put("状态码", 500);
             response.put("消息", "获取失败: " + e.getMessage());
+            response.put("时间戳", System.currentTimeMillis());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * 读取Nginx访问日志
+     * 读取 C:\Users\Administrator\Desktop\ServerSync\Nginx日志\access(日期).log 文件
+     */
+    @GetMapping("/nginx-log")
+    @Operation(summary = "读取Nginx访问日志", description = "读取Nginx访问日志文件内容，支持按行数限制")
+    public ResponseEntity<Map<String, Object>> getNginxLog(
+            @RequestParam(value = "limit", defaultValue = "1000") int limit) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // 动态获取当前日期
+            LocalDate currentDate = LocalDate.now();
+            String dateStr = currentDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            String logFilePath = "C:\\Users\\Administrator\\Desktop\\ServerSync\\Nginx日志\\access(" + dateStr + ").log";
+            
+            // 读取文件内容
+            java.nio.file.Path path = Paths.get(logFilePath);
+            
+            // 检查文件是否存在
+            if (!Files.exists(path)) {
+                response.put("状态码", 404);
+                response.put("消息", "❌ 日志文件不存在: " + logFilePath);
+                response.put("时间戳", System.currentTimeMillis());
+                return ResponseEntity.status(404).body(response);
+            }
+            
+            // 读取所有行
+            List<String> allLines = Files.readAllLines(path, StandardCharsets.UTF_8);
+            
+            // 按limit限制返回的行数
+            List<String> lines = new ArrayList<>();
+            int startIndex = Math.max(0, allLines.size() - limit);
+            for (int i = startIndex; i < allLines.size(); i++) {
+                lines.add(allLines.get(i));
+            }
+            
+            Map<String, Object> data = new HashMap<>();
+            data.put("总行数", allLines.size());
+            data.put("返回行数", lines.size());
+            data.put("日志内容", lines);
+            
+            response.put("状态码", 200);
+            response.put("消息", "✅ Nginx日志读取成功");
+            response.put("数据", data);
+            response.put("时间戳", System.currentTimeMillis());
+            
+            return ResponseEntity.ok(response);
+        } catch (java.io.IOException e) {
+            log.error("❌ 读取Nginx日志失败", e);
+            response.put("状态码", 500);
+            response.put("消息", "读取文件失败: " + e.getMessage());
+            response.put("时间戳", System.currentTimeMillis());
+            return ResponseEntity.status(500).body(response);
+        } catch (Exception e) {
+            log.error("❌ 处理Nginx日志请求失败", e);
+            response.put("状态码", 500);
+            response.put("消息", "处理请求失败: " + e.getMessage());
             response.put("时间戳", System.currentTimeMillis());
             return ResponseEntity.status(500).body(response);
         }
