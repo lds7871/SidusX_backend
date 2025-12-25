@@ -33,7 +33,8 @@ http {
         listen       80;
         server_name  115.190.170.56;
 
-        location / {
+        # 仅允许以 /api 或 /GHapi 开头的请求代理到后端
+        location ~ ^/(api|GHapi) {
             proxy_pass http://app_backend;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
@@ -43,6 +44,11 @@ http {
             proxy_read_timeout 90s;
             proxy_connect_timeout 10s;
             proxy_send_timeout 10s;
+        }
+
+        # 拒绝其他所有请求
+        location / {
+            return 403 "弱智";
         }
 
         # 可选：强制跳转到 HTTPS
@@ -120,19 +126,6 @@ http {
         # 拒绝其他所有请求
         location / {
             return 403 "弱智";
-        }
-
-        # 健康检查接口（Spring Boot Actuator）
-        location /actuator/health {
-            proxy_pass http://app_backend/actuator/health;
-            proxy_set_header X-Forwarded-Host $host;
-        }
-
-        # 静态资源缓存优化
-        location ~* \.(js|css|png|jpg|jpeg|gif|svg|ico)$ {
-            proxy_pass http://app_backend;
-            expires 7d;
-            add_header Cache-Control "public";
         }
     }
 
