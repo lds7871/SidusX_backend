@@ -1,6 +1,5 @@
 package LDS.Person.service;
 
-import LDS.Person.entity.Wiki;
 import LDS.Person.dto.request.WikiCreateRequest;
 import LDS.Person.dto.request.WikiPageQueryRequest;
 import LDS.Person.dto.response.WikiResponse;

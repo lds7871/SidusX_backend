@@ -2,7 +2,6 @@ package LDS.Person.controller;
 
 
 import LDS.Person.entity.ApiLog;
-import LDS.Person.repository.ApiLogMapper;
 import LDS.Person.dto.request.ApiLogQueryRequest;
 import LDS.Person.dto.response.ApiLogResponse;
 import LDS.Person.dto.response.ApiLogSimpleResultResponse;
@@ -37,9 +36,6 @@ import java.util.Map;
 public class ServerInfoController {
 
     private static final Logger log = LoggerFactory.getLogger(ServerInfoController.class);
-
-    @Autowired
-    private ApiLogMapper apiLogMapper;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
