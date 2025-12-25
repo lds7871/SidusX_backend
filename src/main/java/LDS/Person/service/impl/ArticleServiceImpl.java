@@ -134,7 +134,7 @@ public class ArticleServiceImpl implements ArticleService {
         StringBuilder sql = new StringBuilder();
         ArrayList<Object> params = new ArrayList<>();
 
-        sql.append("SELECT article_id, cover, info, tags ");
+        sql.append("SELECT article_id, title, cover, info, tags ");
         sql.append("FROM article WHERE 1=1 ");
 
         buildCondition(sql, params, request);
@@ -148,6 +148,7 @@ public class ArticleServiceImpl implements ArticleService {
         return jdbcTemplate.query(sql.toString(), (rs, rowNum) -> {
             ArticleListResponse response = new ArticleListResponse();
             response.setArticleId(rs.getLong("article_id"));
+            response.setTitle(rs.getString("title"));
             response.setCover(rs.getString("cover"));
             response.setInfo(rs.getString("info"));
             response.setTags(rs.getString("tags"));

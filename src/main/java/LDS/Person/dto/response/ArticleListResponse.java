@@ -15,6 +15,9 @@ public class ArticleListResponse {
     @Schema(description = "文章ID", example = "1")
     private Long articleId;
 
+    @Schema(description = "文章标题", example = "Spring Boot 最佳实践")
+    private String title;
+
     @Schema(description = "封面图片地址", example = "https://example.com/cover.jpg")
     private String cover;
 
