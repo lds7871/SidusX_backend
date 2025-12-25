@@ -22,7 +22,7 @@ import LDS.Person.service.ArticleService;
  * 提供文章分页查询和新建功能
  */
 @RestController
-@RequestMapping("/api/article")
+@RequestMapping("/GHapi/article")
 @Tag(name = "文章管理", description = "文章的查询和创建接口")
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class ArticleController {

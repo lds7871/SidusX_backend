@@ -99,8 +99,8 @@ http {
             log_not_found off;
         }
 
-        # 默认代理所有请求到后端
-        location / {
+        # 仅允许以 /api 或 /GHapi 开头的请求代理到后端
+        location ~ ^/(api|GHapi) {
             proxy_pass http://app_backend;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
@@ -115,6 +115,11 @@ http {
             proxy_read_timeout 90s;
             proxy_connect_timeout 10s;
             proxy_send_timeout 10s;
+        }
+
+        # 拒绝其他所有请求
+        location / {
+            return 403 "弱智";
         }
 
         # 健康检查接口（Spring Boot Actuator）

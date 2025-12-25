@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
  * 提供 Wiki 的增、删、查接口
  */
 @RestController
-@RequestMapping("/api/wiki")
+@RequestMapping("/GHapi/wiki")
 public class WikiController {
     
     private static final Logger log = LoggerFactory.getLogger(WikiController.class);

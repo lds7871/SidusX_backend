@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
  * Wiki 审核控制层
  */
 @RestController
-@RequestMapping("/api/wiki-review")
+@RequestMapping("/GHapi/wiki-review")
 @Tag(name = "Wiki 审核管理")
 public class WikiReviewController {
 
