@@ -41,6 +41,8 @@ public class ApiLogFilter extends OncePerRequestFilter {
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
     // 请求/响应体的最大长度限制，超过此长度将被截断
     private static final int MAX_BODY_LENGTH = 2000;
+    // 响应体的最大长度限制，超过此长度将被截断
+    private static final int MAX_RESPONSE_LENGTH = 200;
     // 请求缓存大小限制，用于 ContentCachingRequestWrapper
     private static final int REQUEST_CACHE_LIMIT = 1024 * 1024; // 1MB
 
@@ -54,6 +56,7 @@ public class ApiLogFilter extends OncePerRequestFilter {
 
     /**
      * 构造函数，注入 JdbcTemplate 依赖
+     * 
      * @param jdbcTemplate JDBC 模板实例
      */
     @Autowired
@@ -64,11 +67,12 @@ public class ApiLogFilter extends OncePerRequestFilter {
     /**
      * 执行过滤器逻辑，记录 API 请求和响应的详细信息
      * 仅对以 "/GHapi" 开头的请求进行日志记录
-     * @param request HTTP 请求对象
-     * @param response HTTP 响应对象
+     * 
+     * @param request     HTTP 请求对象
+     * @param response    HTTP 响应对象
      * @param filterChain 过滤器链
      * @throws ServletException Servlet 异常
-     * @throws IOException IO 异常
+     * @throws IOException      IO 异常
      */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -115,12 +119,15 @@ public class ApiLogFilter extends OncePerRequestFilter {
                 if (reqBuf != null && reqBuf.length > 0) {
                     // 获取请求字符编码，默认使用 UTF-8 以避免中文乱码
                     String charsetName = wrappedRequest.getCharacterEncoding();
-                    java.nio.charset.Charset charset = (charsetName == null || charsetName.equalsIgnoreCase("ISO-8859-1")) 
-                        ? StandardCharsets.UTF_8 : java.nio.charset.Charset.forName(charsetName);
+                    java.nio.charset.Charset charset = (charsetName == null
+                            || charsetName.equalsIgnoreCase("ISO-8859-1"))
+                                    ? StandardCharsets.UTF_8
+                                    : java.nio.charset.Charset.forName(charsetName);
                     String payload = new String(reqBuf, charset);
                     if (!payload.isBlank()) {
                         // 如果是 JSON 内容类型，尝试解析为对象，否则直接记录字符串
-                        if (wrappedRequest.getContentType() != null && wrappedRequest.getContentType().contains("application/json")) {
+                        if (wrappedRequest.getContentType() != null
+                                && wrappedRequest.getContentType().contains("application/json")) {
                             try {
                                 Object parsed = mapper.readValue(payload, Object.class);
                                 logData.put("request_body", parsed);
@@ -143,21 +150,24 @@ public class ApiLogFilter extends OncePerRequestFilter {
                 if (respBuf != null && respBuf.length > 0) {
                     // 获取响应字符编码，默认使用 UTF-8 以避免中文乱码
                     String charsetName = wrappedResponse.getCharacterEncoding();
-                    java.nio.charset.Charset charset = (charsetName == null || charsetName.equalsIgnoreCase("ISO-8859-1")) 
-                        ? StandardCharsets.UTF_8 : java.nio.charset.Charset.forName(charsetName);
+                    java.nio.charset.Charset charset = (charsetName == null
+                            || charsetName.equalsIgnoreCase("ISO-8859-1"))
+                                    ? StandardCharsets.UTF_8
+                                    : java.nio.charset.Charset.forName(charsetName);
                     String payload = new String(respBuf, charset);
                     if (!payload.isBlank()) {
                         // 如果是 JSON 内容类型，尝试解析为对象，否则直接记录字符串
-                        if (wrappedResponse.getContentType() != null && wrappedResponse.getContentType().contains("application/json")) {
+                        if (wrappedResponse.getContentType() != null
+                                && wrappedResponse.getContentType().contains("application/json")) {
                             try {
                                 Object parsed = mapper.readValue(payload, Object.class);
                                 logData.put("response", parsed);
                             } catch (Exception e) {
-                                // 解析失败时记录原始字符串
-                                logData.put("response", truncate(payload));
+                                // 解析失败时记录原始字符串（截断到 200 个字符）
+                                logData.put("response", truncateResponse(payload));
                             }
                         } else {
-                            logData.put("response", truncate(payload));
+                            logData.put("response", truncateResponse(payload));
                         }
                     }
                 }
@@ -211,12 +221,29 @@ public class ApiLogFilter extends OncePerRequestFilter {
 
     /**
      * 截断字符串到最大长度，如果超过则添加省略号
+     * 
      * @param s 要截断的字符串
      * @return 截断后的字符串
      */
     private String truncate(String s) {
-        if (s == null) return null;
-        if (s.length() <= MAX_BODY_LENGTH) return s;
+        if (s == null)
+            return null;
+        if (s.length() <= MAX_BODY_LENGTH)
+            return s;
         return s.substring(0, MAX_BODY_LENGTH) + "...(truncated)";
+    }
+
+    /**
+     * 截断响应字符串到 200 个字符，如果超过则添加省略号
+     * 
+     * @param s 要截断的字符串
+     * @return 截断后的字符串
+     */
+    private String truncateResponse(String s) {
+        if (s == null)
+            return null;
+        if (s.length() <= MAX_RESPONSE_LENGTH)
+            return s;
+        return s.substring(0, MAX_RESPONSE_LENGTH) + "...(truncated)";
     }
 }

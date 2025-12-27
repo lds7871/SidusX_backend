@@ -17,8 +17,8 @@ http {
     sendfile        on;
     keepalive_timeout  65;
 
-    # ==================== 全局限流和IP封禁配置 ====================
-    # 1. 定义限流键：本地IP映射为空字符串（Nginx会自动跳过空字符串的限流）
+    # ==================== 全局变量配置 ====================
+    # 限流键：本地IP和内网IP映射为空字符串（跳过限流）
     geo $limit_key {
         default $remote_addr;
         127.0.0.1 "";
@@ -28,32 +28,31 @@ http {
         192.168.0.0/16 "";
     }
 
-    # 2. 定义限流区域：基于 $limit_key 限流，每秒最多1个请求
+    # 限流区域：每秒最多1个请求
     limit_req_zone $limit_key zone=global_limit:10m rate=1r/s;
 
-    # 3. 定义连接限制区域（可选）
+    # 连接限制区域
     limit_conn_zone $limit_key zone=conn_limit:10m;
-    # ==================== 全局限流和IP封禁配置结束 ====================
+    # ==================== 全局变量配置结束 ====================
 
-    # 定义后端服务地址
+    # ==================== 后端服务定义 ====================
     upstream app_backend {
         server 127.0.0.1:8090;  # X自动，QQ机器人 服务监听端口
         server 127.0.0.1:8100;  # 毕业设计 服务监听端口
     }
 
-    # 定义 Vue 前端服务地址
     upstream vue_app {
         server 127.0.0.1:5173;  # Vue Vite 开发服务或生产预览服务
     }
+    # ==================== 后端服务定义结束 ====================
 
-    # HTTP 入口（用于 Twitter OAuth 回调）
+    # ==================== HTTP 服务 ====================
+    # IP 地址服务（115.190.170.56）- API 代理和 Twitter OAuth 回调
     server {
         listen       80;
         server_name  115.190.170.56;
 
-        # 仅允许以 /api 或 /GHapi 开头的请求代理到后端
         location ~ ^/(api|GHapi) {
-            # 应用全局限流（允许小规模突发以提高稳定性）
             limit_req zone=global_limit burst=2 nodelay;
             limit_req_status 429;
 
@@ -68,68 +67,80 @@ http {
             proxy_send_timeout 10s;
         }
 
-        # 拒绝其他所有请求
         location / {
-            # 应用全局限流
             limit_req zone=global_limit burst=2 nodelay;
             limit_req_status 429;
             return 403 "弱智";
         }
     }
 
-    # Vue 前端应用（HTTP）- 重定向到 HTTPS
+    # 域名服务（zh-company.top）- API 代理和前端路由
     server {
         listen       80;
         server_name  zh-company.top www.zh-company.top;
 
-        return 301 https://$server_name$request_uri;
-    }
+        location ~ ^/(api|GHapi) {
+            limit_req zone=global_limit burst=2 nodelay;
+            limit_req_status 429;
 
-    # HTTPS 入口（推荐生产环境使用）
+            proxy_pass http://app_backend;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_http_version 1.1;
+            proxy_read_timeout 90s;
+            proxy_connect_timeout 10s;
+            proxy_send_timeout 10s;
+        }
+
+        # 其他请求重定向到 HTTPS
+        location / {
+            return 301 https://$server_name$request_uri;
+        }
+    }
+    # ==================== HTTP 服务结束 ====================
+
+    # ==================== HTTPS 服务 ====================
+    # IP 地址服务（115.190.170.56）- API 代理和安全访问
     server {
         listen 443 ssl;
         http2 on;
         server_name 115.190.170.56;
 
-        # SSL 证书路径（请确保文件存在）
+        # SSL 证书配置
         ssl_certificate     C:/Users/Administrator/Desktop/ServerSync/Nginx-1.28.0/ssl/fullchain.pem;
         ssl_certificate_key C:/Users/Administrator/Desktop/ServerSync/Nginx-1.28.0/ssl/privkey.pem;
-
         ssl_protocols TLSv1.2 TLSv1.3;
         ssl_prefer_server_ciphers on;
         ssl_ciphers "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256";
         add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
 
-       # 阻止访问隐藏文件和目录
+        # ==================== 安全规则 ====================
+        # 阻止访问隐藏文件和目录
         location ~ /\. {
             deny all;
             access_log off;
             log_not_found off;
         }
 
-        # 阻止访问敏感配置文件
+        # 阻止访问版本控制目录
         location ~ \.(git|svn|hg) {
             deny all;
             access_log off;
             log_not_found off;
         }
 
-        # 阻止访问 IDE 配置文件
-        location ~ /\.vscode/ {
+        # 阻止访问 IDE 配置目录
+        location ~ /\.(vscode|idea)/ {
             deny all;
             access_log off;
             log_not_found off;
         }
+        # ==================== 安全规则结束 ====================
 
-        location ~ /\.idea/ {
-            deny all;
-            access_log off;
-            log_not_found off;
-        }
-
-        # 仅允许以 /api 或 /GHapi 开头的请求代理到后端
+        # API 代理
         location ~ ^/(api|GHapi) {
-            # 应用全局限流
             limit_req zone=global_limit burst=2 nodelay;
             limit_req_status 429;
 
@@ -138,36 +149,31 @@ http {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-
-            # WebSocket 支持
             proxy_set_header Upgrade $http_upgrade;
             proxy_set_header Connection "upgrade";
-
             proxy_http_version 1.1;
             proxy_read_timeout 90s;
             proxy_connect_timeout 10s;
             proxy_send_timeout 10s;
         }
 
-        # 拒绝其他所有请求
+        # 拒绝其他请求
         location / {
-            # 应用全局限流
             limit_req zone=global_limit burst=2 nodelay;
             limit_req_status 429;
             return 403 "弱智";
         }
     }
 
-    # Vue 前端应用（HTTPS） - 静态文件服务
+    # 域名服务（zh-company.top）- 前端应用和 API 代理
     server {
         listen 443 ssl;
         http2 on;
         server_name zh-company.top www.zh-company.top;
 
-        # SSL 证书路径（使用现有证书，请确保证书支持 zh-company.top 域名）
+        # SSL 证书配置
         ssl_certificate     C:/Users/Administrator/Desktop/ServerSync/Nginx-1.28.0/ssl/zh-company.top.pem;
         ssl_certificate_key C:/Users/Administrator/Desktop/ServerSync/Nginx-1.28.0/ssl/zh-company.top.key;
-
         ssl_protocols TLSv1.2 TLSv1.3;
         ssl_prefer_server_ciphers on;
         ssl_ciphers "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256";
@@ -176,8 +182,11 @@ http {
         root C:\Users\Administrator\Desktop\ZHcompany\dist;
         index index.html;
 
-        # API 代理到后端服务
-        location /api/ {
+        # API 代理
+        location ~ ^/(api|GHapi)/ {
+            limit_req zone=global_limit burst=2 nodelay;
+            limit_req_status 429;
+
             proxy_pass http://app_backend;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
@@ -189,15 +198,16 @@ http {
             proxy_send_timeout 10s;
         }
 
-        # Vue Router 配置 - 所有路由都返回 index.html
-        location / {
-            try_files $uri $uri/ /index.html;
-        }
-
         # 静态资源缓存优化
         location ~* \.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2)$ {
             expires 30d;
             add_header Cache-Control "public, immutable";
         }
+
+        # Vue Router 配置 - 所有路由都返回 index.html
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
     }
+    # ==================== HTTPS 服务结束 ====================
 }
