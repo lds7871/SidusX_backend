@@ -161,7 +161,9 @@ public class ApiLogFilter extends OncePerRequestFilter {
                                 && wrappedResponse.getContentType().contains("application/json")) {
                             try {
                                 Object parsed = mapper.readValue(payload, Object.class);
-                                logData.put("response", parsed);
+                                // 将解析后的对象序列化为字符串，然后检查长度
+                                String jsonStr = mapper.writeValueAsString(parsed);
+                                logData.put("response", truncateResponse(jsonStr));
                             } catch (Exception e) {
                                 // 解析失败时记录原始字符串（截断到 200 个字符）
                                 logData.put("response", truncateResponse(payload));
