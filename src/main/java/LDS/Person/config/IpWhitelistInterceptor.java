@@ -113,7 +113,8 @@ public class IpWhitelistInterceptor implements HandlerInterceptor {
 
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 response.setContentType("application/json;charset=UTF-8");
-                response.getWriter().write("{\"error\":\"Access denied: Your IP is not whitelisted and token is invalid\"}");
+                response.getWriter()
+                        .write("{\"error\":\"Access denied: Your IP is not whitelisted and token is invalid\"}");
                 response.getWriter().flush();
                 logAccess(clientIp, path, 0, cachedRequest);
                 return false;
@@ -141,7 +142,8 @@ public class IpWhitelistInterceptor implements HandlerInterceptor {
 
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"error\":\"Access denied: Your IP is not whitelisted and token is invalid\"}");
+            response.getWriter()
+                    .write("{\"error\":\"Access denied: Your IP is not whitelisted and token is invalid\"}");
             response.getWriter().flush();
             logAccess(clientIp, path, 0, cachedRequest);
             return false;
@@ -174,14 +176,15 @@ public class IpWhitelistInterceptor implements HandlerInterceptor {
         }
 
         // 不记录本地请求（127.0.0.1 或 ::1）
-        if ("127.0.0.1".equals(ip) || "::1".equals(ip) || "0:0:0:0:0:0:0:1".equals(ip)) {
-            log.debug("跳过记录本地请求 - IP: {}, API: {}", ip, api);
-            return;
-        }
+        // if ("127.0.0.1".equals(ip) || "::1".equals(ip) ||
+        // "0:0:0:0:0:0:0:1".equals(ip)) {
+        // log.debug("跳过记录本地请求 - IP: {}, API: {}", ip, api);
+        // return;
+        // }
 
         // 不记录 favicon.ico 请求（静态资源，会产生大量日志噪音）
         if (api.equals("/favicon.ico")) {
-            //log.debug("跳过记录 favicon.ico 请求");
+            // log.debug("跳过记录 favicon.ico 请求");
             return;
         }
 
@@ -202,7 +205,8 @@ public class IpWhitelistInterceptor implements HandlerInterceptor {
             // 缓存请求信息，用于后续可能的合并
             if (insertedId > 0) {
                 recentRequests.put(ip, new RecentRequest(detailedApi, System.currentTimeMillis(), insertedId));
-                //log.debug("访问日志已保存到数据库 - ID: {}, IP: {}, API: {}, States: {}", insertedId, ip, api, states);
+                // log.debug("访问日志已保存到数据库 - ID: {}, IP: {}, API: {}, States: {}", insertedId,
+                // ip, api, states);
             } else {
                 log.warn("\n!!!访问日志保存失败，没有返回记录ID - IP: {}, API: {}, States: {}", ip, api, states);
             }
@@ -511,7 +515,7 @@ public class IpWhitelistInterceptor implements HandlerInterceptor {
                 Number key = keyHolder.getKey();
                 int id = key != null ? key.intValue() : -1;
                 if (id > 0) {
-                    //log.debug("数据库插入成功 - 记录ID: {}, IP: {}, States: {}", id, ip, states);
+                    // log.debug("数据库插入成功 - 记录ID: {}, IP: {}, States: {}", id, ip, states);
                     return id;
                 } else {
                     log.warn("\n!!!数据库插入成功但未返回ID - IP: {}, States: {}", ip, states);
