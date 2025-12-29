@@ -35,8 +35,8 @@ public class WikiReviewController {
      * 提交 Wiki 审核申请
      */
     @PostMapping("/create")
-    @BypassIpWhitelist(reason = "提交 Wiki 审核")
-    @Operation(summary = "提交 Wiki 审核申请")
+    @BypassIpWhitelist(reason = "提交 Wiki 修改审核")
+    @Operation(summary = "提交 Wiki 修改审核申请")
     public ResponseEntity<?> createReview(@RequestBody WikiReviewCreateRequest request) {
         try {
             log.info("提交 Wiki 审核 - WikiID: {}", request.getWikiId());
@@ -80,11 +80,11 @@ public class WikiReviewController {
      * 分页查询 Wiki 审核记录
      */
     @PostMapping("/page")
-    @Operation(summary = "分页查询 Wiki 审核记录")
+    @Operation(summary = "分页查询 Wiki 修改审核记录")
     public ResponseEntity<PageResponse<WikiReviewResponse>> pageQuery(@RequestBody WikiReviewPageQueryRequest request) {
         try {
-            log.info("分页查询 Wiki 审核 - Page: {}, PageSize: {}, Status: {}", 
-                request.getPage(), request.getPageSize(), request.getWikiStates());
+            log.info("分页查询 Wiki 审核 - Page: {}, PageSize: {}, Status: {}",
+                    request.getPage(), request.getPageSize(), request.getWikiStates());
             PageResponse<WikiReviewResponse> response = wikiReviewService.pageQuery(request);
             return ResponseEntity.ok(response);
         } catch (Exception e) {

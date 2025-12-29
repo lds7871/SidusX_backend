@@ -9,21 +9,23 @@ import LDS.Person.dto.response.PageResponse;
  * Wiki 业务逻辑接口
  */
 public interface WikiService {
-    
+
     /**
      * 新增 Wiki 记录
+     * 
      * @param request 创建请求
      * @return Wiki 响应
      */
     WikiResponse createWiki(WikiCreateRequest request);
-    
+
     /**
      * 删除 Wiki 记录
+     * 
      * @param wikiId Wiki ID
      * @return true 删除成功，false 删除失败（记录不存在）
      */
     boolean deleteWiki(Long wikiId);
-    
+
     /**
      * 分页查询 Wiki 列表
      * 支持多条件过滤和排序
@@ -32,4 +34,12 @@ public interface WikiService {
      * @return 分页响应
      */
     PageResponse<WikiResponse> pageQuery(WikiPageQueryRequest request);
+
+    /**
+     * 检查 Wiki 键名是否已存在
+     * 
+     * @param keyName Wiki 键名
+     * @return true 表示键名已存在，false 表示不存在
+     */
+    boolean isKeyNameExists(String keyName);
 }

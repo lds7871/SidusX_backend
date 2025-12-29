@@ -1,6 +1,7 @@
 package LDS.Person.controller;
 
 import LDS.Person.service.WikiService;
+import io.swagger.v3.oas.annotations.Operation;
 import LDS.Person.dto.request.WikiCreateRequest;
 import LDS.Person.dto.request.WikiPageQueryRequest;
 import LDS.Person.dto.response.WikiResponse;
@@ -20,25 +21,25 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/GHapi/wiki")
 public class WikiController {
-    
+
     private static final Logger log = LoggerFactory.getLogger(WikiController.class);
-    
+
     private final WikiService wikiService;
-    
+
     public WikiController(WikiService wikiService) {
         this.wikiService = wikiService;
     }
-    
+
     /**
      * 新增 Wiki 记录
      * 
      * 请求体示例：
      * {
-     *   "key_name": "java_basics",
-     *   "texts": "Java 基础教程",
-     *   "tags": ["java", "programming", "basics"],
-     *   "create_user": "admin",
-     *   "update_user": "admin"
+     * "key_name": "java_basics",
+     * "texts": "Java 基础教程",
+     * "tags": ["java", "programming", "basics"],
+     * "create_user": "admin",
+     * "update_user": "admin"
      * }
      * 
      * create_user 和 update_user 为可选字段，不提供时默认为 "system"
@@ -48,6 +49,7 @@ public class WikiController {
      */
     @PostMapping("/create")
     @BypassIpWhitelist(reason = "Wiki 创建接口")
+    @Operation(summary = "创建新的 Wiki")
     public ResponseEntity<?> createWiki(@RequestBody WikiCreateRequest request) {
         try {
             log.info("创建 Wiki - KeyName: {}", request.getKeyName());
@@ -63,7 +65,7 @@ public class WikiController {
                     .body(JsonResponse.failure("Wiki 创建失败: " + ex.getMessage()));
         }
     }
-    
+
     /**
      * 删除 Wiki 记录
      * 
@@ -71,6 +73,7 @@ public class WikiController {
      * @return JSON 格式的删除结果
      */
     @DeleteMapping("/{wikiId}")
+    @Operation(summary = "删除指定 ID 的 Wiki")
     public ResponseEntity<JsonResponse> deleteWiki(@PathVariable Long wikiId) {
         try {
             log.info("删除 Wiki - ID: {}", wikiId);
@@ -91,19 +94,19 @@ public class WikiController {
                     .body(JsonResponse.failure("Wiki 删除失败"));
         }
     }
-    
+
     /**
      * 分页查询 Wiki 列表
      * 支持多条件过滤和排序
      * 
      * 请求体示例：
      * {
-     *   "page": 1,
-     *   "page_size": 10,
-     *   "key_name": "java",
-     *   "tags": "programming",
-     *   "create_time_start": "2025-01-01 00:00:00",
-     *   "create_time_end": "2025-12-31 23:59:59"
+     * "page": 1,
+     * "page_size": 10,
+     * "key_name": "java",
+     * "tags": "programming",
+     * "create_time_start": "2025-01-01 00:00:00",
+     * "create_time_end": "2025-12-31 23:59:59"
      * }
      * 
      * 字段说明：
@@ -118,6 +121,7 @@ public class WikiController {
      * @return 分页响应
      */
     @PostMapping("/page")
+    @Operation(summary = "分页查询 Wiki 列表")
     @BypassIpWhitelist(reason = "Wiki 分页查询接口")
     public ResponseEntity<PageResponse<WikiResponse>> pageQuery(@RequestBody WikiPageQueryRequest request) {
         try {
@@ -127,6 +131,83 @@ public class WikiController {
         } catch (Exception ex) {
             log.error("Wiki 分页查询失败", ex);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * 查询 Wiki 名称重复性
+     * 检查给定的 key_name 是否已在数据库中存在
+     * 
+     * 请求示例：
+     * GET /GHapi/wiki/check-key-name?keyName=java_basics
+     * 
+     * 响应示例（存在）：
+     * {
+     * "exists": true,
+     * "message": "已有此名称！"
+     * }
+     * 
+     * 响应示例（不存在）：
+     * {
+     * "exists": false,
+     * "message": "可创建的Wiki名称"
+     * }
+     * 
+     * @param keyName Wiki 键名
+     * @return JSON 响应，包含存在状态和提示信息
+     */
+    @GetMapping("/check-key-name")
+    @Operation(summary = "检查 Wiki 名称是否已存在")
+    @BypassIpWhitelist(reason = "Wiki 名称检查接口")
+    public ResponseEntity<?> checkKeyName(@RequestParam String keyName) {
+        try {
+            if (keyName == null || keyName.trim().isEmpty()) {
+                log.warn("Wiki 键名为空");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(JsonResponse.failure("Wiki 键名不能为空"));
+            }
+
+            log.info("检查 Wiki 键名 - KeyName: {}", keyName);
+            boolean exists = wikiService.isKeyNameExists(keyName.trim());
+
+            if (exists) {
+                return ResponseEntity.ok(new NameCheckResponse(true, "已有此名称！"));
+            } else {
+                return ResponseEntity.ok(new NameCheckResponse(false, "可创建的Wiki名称"));
+            }
+        } catch (Exception ex) {
+            log.error("Wiki 名称检查失败", ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(JsonResponse.failure("Wiki 名称检查失败"));
+        }
+    }
+
+    /**
+     * Wiki 名称检查响应类
+     */
+    public static class NameCheckResponse {
+        private boolean exists;
+        private String message;
+
+        public NameCheckResponse(boolean exists, String message) {
+            this.exists = exists;
+            this.message = message;
+        }
+
+        public boolean isExists() {
+            return exists;
+        }
+
+        public void setExists(boolean exists) {
+            this.exists = exists;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
         }
     }
 }
