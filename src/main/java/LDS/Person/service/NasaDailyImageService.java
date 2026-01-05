@@ -1,5 +1,9 @@
 package LDS.Person.service;
 
+import LDS.Person.dto.request.NasaDailyImagePageQueryRequest;
+import LDS.Person.dto.response.NasaDailyImageListResponse;
+import LDS.Person.dto.response.NasaDailyImageDetailResponse;
+import LDS.Person.dto.response.PageResponse;
 import LDS.Person.entity.NasaDailyImage;
 
 import java.util.List;
@@ -8,7 +12,7 @@ import java.util.List;
  * NASA APOD 每日图片信息服务接口
  */
 public interface NasaDailyImageService {
-    
+
     /**
      * 获取并保存今日NASA APOD图片
      */
@@ -36,4 +40,29 @@ public interface NasaDailyImageService {
      * @return NASA图片信息列表
      */
     List<NasaDailyImage> list();
+
+    /**
+     * 分页查询NASA图片列表
+     * 支持按标题和时间范围筛选
+     * 
+     * @param request 分页查询请求
+     * @return 分页响应
+     */
+    PageResponse<NasaDailyImageListResponse> pageQuery(NasaDailyImagePageQueryRequest request);
+
+    /**
+     * 获取NASA图片详细信息
+     * 
+     * @param apodId 图片ID
+     * @return 图片详细信息
+     */
+    NasaDailyImageDetailResponse getDetail(Long apodId);
+
+    /**
+     * 删除NASA图片记录
+     * 
+     * @param apodId 图片ID
+     * @return 是否删除成功
+     */
+    boolean deleteById(Long apodId);
 }
