@@ -84,7 +84,7 @@ public class NasaDailyImageController {
 
   /**
    * 获取NASA图片详细信息
-   * 返回完整的图片信息，包括版权信息、说明文字等
+   * 返回完整的图片信息，包括版权信息、说明文字、图片链接等
    * 
    * 请求示例：
    * GET /GHapi/nasa-daily-image/1
@@ -96,6 +96,7 @@ public class NasaDailyImageController {
    * "explanation": "This is a detailed explanation of the image...",
    * "media_type": "image",
    * "title": "The Pillars of Creation",
+   * "url": "https://apod.nasa.gov/apod/image/2501/...",
    * "create_time": "2025-01-05 10:30:00"
    * }
    * 

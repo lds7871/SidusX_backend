@@ -186,7 +186,7 @@ public class NasaDailyImageServiceImpl implements NasaDailyImageService {
             return null;
         }
 
-        String sql = "SELECT apod_id, copyright, explanation, media_type, title, create_time " +
+        String sql = "SELECT apod_id, copyright, explanation, media_type, title, url, create_time " +
                 "FROM nasa_daily_image WHERE apod_id = ?";
         try {
             return jdbcTemplate.queryForObject(sql, new NasaDailyImageDetailRowMapper(), apodId);
@@ -318,6 +318,7 @@ public class NasaDailyImageServiceImpl implements NasaDailyImageService {
             response.setExplanation(rs.getString("explanation"));
             response.setMediaType(rs.getString("media_type"));
             response.setTitle(rs.getString("title"));
+            response.setUrl(rs.getString("url"));
 
             java.sql.Timestamp createTime = rs.getTimestamp("create_time");
             if (createTime != null) {

@@ -8,7 +8,7 @@ import lombok.Setter;
 
 /**
  * NASA 每日图片详细响应类
- * 返回 apod_id, copyright, explanation, media_type, title, create_time
+ * 返回 apod_id, copyright, explanation, media_type, title, url, create_time
  */
 @Getter
 @Setter
@@ -31,6 +31,9 @@ public class NasaDailyImageDetailResponse {
 
   @Schema(description = "图片标题", example = "The Pillars of Creation")
   private String title;
+
+  @Schema(description = "图片或视频的链接", example = "https://apod.nasa.gov/apod/image/2501/...")
+  private String url;
 
   @Schema(description = "创建时间", example = "2025-01-05 10:30:00")
   private String createTime;
