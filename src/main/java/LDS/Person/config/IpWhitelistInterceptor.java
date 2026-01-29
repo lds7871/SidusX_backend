@@ -106,20 +106,20 @@ public class IpWhitelistInterceptor implements HandlerInterceptor {
 
         // 检查handler是否是HandlerMethod
         if (!(handler instanceof HandlerMethod)) {
-            // 静态资源等 - 如果IP不在白名单内且token无效，拒绝访问
-            if (!isIpAllowed && !isTokenValid) {
-                log.warn("拒绝来自非白名单IP的静态资源请求 - IP: {}, 路径: {}, 方法: {}",
+            // 静态资源等 - 必须同时满足IP白名单与token有效
+            if (!isIpAllowed || !isTokenValid) {
+                log.warn("拒绝静态资源请求 - IP: {}, 路径: {}, 方法: {}, 原因: IP白名单或token校验失败",
                         clientIp, path, cachedRequest.getMethod());
 
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 response.setContentType("application/json;charset=UTF-8");
                 response.getWriter()
-                        .write("{\"error\":\"Access denied: Your IP is not whitelisted and token is invalid\"}");
+                        .write("{\"error\":\"Access denied: IP whitelist and pass_token are both required\"}");
                 response.getWriter().flush();
                 logAccess(clientIp, path, 0, cachedRequest);
                 return false;
             }
-            // IP在白名单内或token有效，放行并记录
+            // IP在白名单内且token有效，放行并记录
             logAccess(clientIp, path, 1, cachedRequest);
             return true;
         }
@@ -135,26 +135,22 @@ public class IpWhitelistInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        // 非公共接口 - 检查IP白名单或pass_token
-        if (!isIpAllowed && !isTokenValid) {
-            log.warn("拒绝来自非白名单IP的API请求 - IP: {}, 路径: {}, 方法: {}, 原因: IP不在白名单且token无效",
+        // 非公共接口 - 必须同时满足IP白名单与pass_token
+        if (!isIpAllowed || !isTokenValid) {
+            log.warn("拒绝API请求 - IP: {}, 路径: {}, 方法: {}, 原因: IP白名单或token校验失败",
                     clientIp, path, cachedRequest.getMethod());
 
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.setContentType("application/json;charset=UTF-8");
             response.getWriter()
-                    .write("{\"error\":\"Access denied: Your IP is not whitelisted and token is invalid\"}");
+                    .write("{\"error\":\"Access denied: IP whitelist and pass_token are both required\"}");
             response.getWriter().flush();
             logAccess(clientIp, path, 0, cachedRequest);
             return false;
         }
 
-        // IP在白名单内或token有效，正常的API请求，放行并记录
-        if (isTokenValid) {
-            log.debug("通过pass_token验证 - IP: {}, 路径: {}, token有效", clientIp, path);
-        } else {
-            log.debug("IP白名单验证通过 - IP: {}, 路径: {}", clientIp, path);
-        }
+        // IP在白名单内且token有效，正常的API请求，放行并记录
+        log.debug("IP白名单与pass_token验证通过 - IP: {}, 路径: {}", clientIp, path);
         logAccess(clientIp, path, 1, cachedRequest);
         return true;
     }
