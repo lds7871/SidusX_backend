@@ -159,6 +159,42 @@ COMMENT ON COLUMN wiki_review.wiki_states IS '审核状态，0待审核，1通�
 COMMENT ON TABLE wiki_review IS 'Wiki审核内容表';
 
 -- #########################################################
+-- 创建wiki新增表                                            已创建
+CREATE TABLE wiki_new (
+    wikinew_id BIGSERIAL PRIMARY KEY, -- 自增主键
+    key_name VARCHAR(200) NOT NULL UNIQUE, -- 唯一键名（必须唯一）
+    texts TEXT NOT NULL, -- 文本内容
+    tags TEXT [], -- 标签
+    version NUMERIC(5, 2) NOT NULL DEFAULT 1.00, -- 版本号，默认1
+    create_time TIMESTAMP NOT NULL DEFAULT NOW(), -- 创建时间
+    create_user VARCHAR(100), -- 创建用户
+    update_time TIMESTAMP NOT NULL DEFAULT NOW(), -- 更新时间
+    update_user VARCHAR(100) -- 最后更新用户
+);
+
+-- 字段注释
+COMMENT ON COLUMN wiki_new.wikinew_id IS 'Wiki ID，自增主键';
+
+COMMENT ON COLUMN wiki_new.key_name IS 'Wiki键名（建议唯一）';
+
+COMMENT ON COLUMN wiki_new.texts IS 'Wiki内容文本';
+
+COMMENT ON COLUMN wiki_new.tags IS '标签';
+
+COMMENT ON COLUMN wiki_new.version IS '版本号';
+
+COMMENT ON COLUMN wiki_new.create_time IS '创建时间';
+
+COMMENT ON COLUMN wiki_new.create_user IS '创建用户id';
+
+COMMENT ON COLUMN wiki_new.update_time IS '更新时间';
+
+COMMENT ON COLUMN wiki_new.update_user IS '更新用户id';
+
+-- 表注释
+COMMENT ON TABLE wiki_new IS 'Wiki内容表';
+
+-- #########################################################
 -- 创建表 spacex_lunch
 CREATE TABLE spacex_lunch (
     lunch_id BIGSERIAL PRIMARY KEY, -- 自增主键
