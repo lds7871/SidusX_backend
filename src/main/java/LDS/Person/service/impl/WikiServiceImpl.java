@@ -155,10 +155,10 @@ public class WikiServiceImpl implements WikiService {
         // 查询分页数据
         List<Wiki> wikiList = selectPageList(request, offset);
 
-        // 转换为响应对象
+        // 转换为响应对象（分页查询不包含 texts 字段）
         List<WikiResponse> responseList = new ArrayList<>();
         for (Wiki wiki : wikiList) {
-            responseList.add(convertToResponse(wiki));
+            responseList.add(convertToResponseWithoutTexts(wiki));
         }
 
         // 计算总页数
@@ -177,6 +177,24 @@ public class WikiServiceImpl implements WikiService {
         response.setWikiId(wiki.getWikiId());
         response.setKeyName(wiki.getKeyName());
         response.setTexts(wiki.getTexts());
+        response.setTags(wiki.getTags());
+        response.setVersion(wiki.getVersion());
+        response.setCreateTime(wiki.getCreateTime() != null ? wiki.getCreateTime().format(DATE_FORMATTER) : null);
+        response.setCreateUser(wiki.getCreateUser());
+        response.setUpdateTime(wiki.getUpdateTime() != null ? wiki.getUpdateTime().format(DATE_FORMATTER) : null);
+        response.setUpdateUser(wiki.getUpdateUser());
+        return response;
+    }
+
+    /**
+     * 将 Wiki 实体转换为响应对象（不包含 texts 字段）
+     * 用于分页查询等不需要完整内容的场景
+     */
+    private WikiResponse convertToResponseWithoutTexts(Wiki wiki) {
+        WikiResponse response = new WikiResponse();
+        response.setWikiId(wiki.getWikiId());
+        response.setKeyName(wiki.getKeyName());
+        // 不设置 texts 字段
         response.setTags(wiki.getTags());
         response.setVersion(wiki.getVersion());
         response.setCreateTime(wiki.getCreateTime() != null ? wiki.getCreateTime().format(DATE_FORMATTER) : null);

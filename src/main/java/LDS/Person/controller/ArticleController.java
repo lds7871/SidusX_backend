@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import LDS.Person.config.BypassIpWhitelist;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import LDS.Person.entity.Article;
@@ -37,12 +38,14 @@ public class ArticleController {
      * 支持按标题和标签模糊查询
      */
     @PostMapping("/query")
+    @BypassIpWhitelist(reason = "文章 分页查询接口")
     @Operation(summary = "分页查询文章列表", description = "支持按标题和标签进行模糊查询，返回简化的文章信息")
     public ResponseEntity<PageResponse<ArticleListResponse>> queryArticles(
             @RequestBody ArticleQueryRequest queryRequest) {
         try {
-            logger.info("分页查询文章 - Page: {}, PageSize: {}, Title: {}, Tags: {}", 
-                queryRequest.getPageNum(), queryRequest.getPageSize(), queryRequest.getTitle(), queryRequest.getTags());
+            logger.info("分页查询文章 - Page: {}, PageSize: {}, Title: {}, Tags: {}",
+                    queryRequest.getPageNum(), queryRequest.getPageSize(), queryRequest.getTitle(),
+                    queryRequest.getTags());
             PageResponse<ArticleListResponse> response = articleService.pageQuery(queryRequest);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -55,13 +58,14 @@ public class ArticleController {
      * 根据文章ID获取完整的文章内容
      */
     @GetMapping("/{articleId}")
+    @BypassIpWhitelist(reason = "文章 内容查询接口")
     @Operation(summary = "获取完整文章内容", description = "根据文章ID获取文章的完整信息，包括所有字段")
     public ResponseEntity<ArticleResultResponse> getArticleById(
             @PathVariable Long articleId) {
         try {
             logger.info("根据ID查询文章 - ArticleId: {}", articleId);
             Article article = articleService.getById(articleId);
-            
+
             if (article != null) {
                 // 转换为响应DTO
                 ArticleResponse response = new ArticleResponse();
