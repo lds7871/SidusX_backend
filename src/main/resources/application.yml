@@ -84,6 +84,18 @@ logging:
     org.hibernate.SQL: DEBUG
     org.mybatis: DEBUG
 
+# WebSocket 控制台输出配置
+websocket:
+  console:
+    enabled: true                    # 是否启用WebSocket控制台输出
+    endpoint: /ws/console            # WebSocket端点路径
+    password: 00FF                   # 连接密码
+    max-text-message-buffer-size: 512000  # 最大文本消息缓冲区大小（字节）
+    max-binary-message-buffer-size: 512000 # 最大二进制消息缓冲区大小（字节）
+    max-session-idle-timeout: 300000      # 会话空闲超时时间（毫秒，5分钟）
+    message-queue-size: 1000              # 消息队列大小
+    history-buffer-size: 100              # 历史消息缓存数量
+
 
 
 
