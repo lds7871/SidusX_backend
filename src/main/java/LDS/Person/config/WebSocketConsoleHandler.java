@@ -10,19 +10,20 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import jakarta.annotation.PostConstruct;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.List;
 
 /**
- * 控制台WebSocket处理器
+ * WebSocket控制台处理器
  * 负责管理WebSocket会话和消息广播
  */
 @Component
-public class ConsoleWebSocketHandler extends TextWebSocketHandler {
+public class WebSocketConsoleHandler extends TextWebSocketHandler {
 
-  private static final Logger logger = LoggerFactory.getLogger(ConsoleWebSocketHandler.class);
+  private static final Logger logger = LoggerFactory.getLogger(WebSocketConsoleHandler.class);
 
   // 活动的WebSocket会话集合
   private final ConcurrentHashMap<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
@@ -39,16 +40,13 @@ public class ConsoleWebSocketHandler extends TextWebSocketHandler {
   @Value("${websocket.console.max-binary-message-buffer-size:512000}")
   private int maxBinaryMessageBufferSize;
 
-  @Value("${websocket.console.max-session-idle-timeout:300000}")
-  private long maxSessionIdleTimeout;
-
   @Value("${websocket.console.message-queue-size:1000}")
   private int messageQueueSize;
 
   @Value("${websocket.console.history-buffer-size:100}")
   private int historyBufferSize;
 
-  public ConsoleWebSocketHandler() {
+  public WebSocketConsoleHandler() {
     this.messageQueue = new LinkedBlockingQueue<>();
     this.historyBuffer = new CopyOnWriteArrayList<>();
   }
@@ -59,7 +57,7 @@ public class ConsoleWebSocketHandler extends TextWebSocketHandler {
     Thread senderThread = new Thread(this::processMessageQueue, "WebSocket-Message-Sender");
     senderThread.setDaemon(true);
     senderThread.start();
-    logger.info("WebSocket Console Handler 已初始化");
+    logger.info("WebSocket 控制台处理器已初始化");
   }
 
   @Override
@@ -73,7 +71,7 @@ public class ConsoleWebSocketHandler extends TextWebSocketHandler {
     logger.info("WebSocket 连接建立: {} (总连接数: {})", session.getId(), sessions.size());
 
     // 发送欢迎消息
-    sendToSession(session, "=== 欢迎使用控制台WebSocket ===\n");
+    sendToSession(session, "=== 正在使用控制台WebSocket ===\n");
     sendToSession(session, "连接ID: " + session.getId() + "\n");
     sendToSession(session, "当前时间: " + new java.util.Date() + "\n");
     sendToSession(session, "================================\n\n");
@@ -163,7 +161,7 @@ public class ConsoleWebSocketHandler extends TextWebSocketHandler {
     if (session.isOpen()) {
       try {
         synchronized (session) {
-          session.sendMessage(new TextMessage(message));
+          session.sendMessage(new TextMessage(message.getBytes(StandardCharsets.UTF_8)));
         }
       } catch (Exception e) {
         logger.error("发送消息失败: {}", session.getId(), e);

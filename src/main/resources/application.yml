@@ -72,6 +72,7 @@ security:
     # 3. Query parameter: "/api/endpoint?pass_token=your-secret-token-1"
 
 logging:
+  config: classpath:logback-spring.xml
   level:
     root: INFO
     LDS.Person: DEBUG

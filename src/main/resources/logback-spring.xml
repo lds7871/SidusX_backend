@@ -10,7 +10,7 @@
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
-            <charset>UTF-8</charset>
+            <charset>GBK</charset>
         </encoder>
     </appender>
     
@@ -29,30 +29,16 @@
         </rollingPolicy>
     </appender>
     
-    <!-- WebSocket输出 -->
-    <appender name="WEBSOCKET" class="LDS.Person.config.WebSocketLogAppender">
-        <!-- WebSocket appender会将日志发送到所有连接的WebSocket客户端 -->
-    </appender>
-    
-    <!-- 异步WebSocket输出，避免阻塞主线程 -->
-    <appender name="ASYNC_WEBSOCKET" class="ch.qos.logback.classic.AsyncAppender">
-        <queueSize>1000</queueSize>
-        <discardingThreshold>0</discardingThreshold>
-        <appender-ref ref="WEBSOCKET"/>
-    </appender>
-    
     <!-- 根日志级别 -->
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
-        <appender-ref ref="ASYNC_WEBSOCKET"/>
     </root>
     
     <!-- 特定包的日志级别 -->
     <logger name="LDS.Person" level="DEBUG" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
-        <appender-ref ref="ASYNC_WEBSOCKET"/>
     </logger>
     
     <logger name="org.springframework.web" level="WARN"/>
