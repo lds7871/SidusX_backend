@@ -32,6 +32,7 @@ CREATE TABLE "users" (
     mail VARCHAR(100) UNIQUE, -- 邮箱唯一
     password VARCHAR(100) NOT NULL, -- 密码（建议存哈希）
     place VARCHAR(100), -- 地址或地区
+    achievement_json JSONB, -- 成就 JSON 数据
     expired_time TIMESTAMP -- 登录过期时间
 );
 

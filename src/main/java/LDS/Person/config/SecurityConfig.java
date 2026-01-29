@@ -61,8 +61,8 @@ public class SecurityConfig implements WebMvcConfigurer {
         IpWhitelistInterceptor interceptor = ipWhitelistInterceptorProvider.getIfAvailable();
         if (interceptor != null) {
             registry.addInterceptor(interceptor)
-                    .addPathPatterns("/**")  // 拦截所有请求
-                    .excludePathPatterns(    // 排除静态资源
+                    .addPathPatterns("/**") // 拦截所有请求
+                    .excludePathPatterns( // 排除静态资源
                             "/static/**",
                             "/css/**",
                             "/js/**",
@@ -71,7 +71,8 @@ public class SecurityConfig implements WebMvcConfigurer {
                             "/swagger-ui/**",
                             "/v3/api-docs/**",
                             "/swagger-resources/**",
-                            "/webjars/**"
+                            "/webjars/**",
+                            "/ws/**" // 排除WebSocket端点
                     );
         }
     }
