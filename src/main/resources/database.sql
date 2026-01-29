@@ -192,7 +192,7 @@ COMMENT ON COLUMN wiki_new.update_time IS '更新时间';
 COMMENT ON COLUMN wiki_new.update_user IS '更新用户id';
 
 -- 表注释
-COMMENT ON TABLE wiki_new IS 'Wiki内容表';
+COMMENT ON TABLE wiki_new IS 'WikiNEW内容表';
 
 -- #########################################################
 -- 创建表 spacex_lunch

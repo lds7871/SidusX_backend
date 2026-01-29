@@ -57,7 +57,7 @@ security:
     - "localhost" # 本地主机名
     - "0:0:0:0:0:0:0:1" # 另一种IPv6本地回环地址
     - "115.190.170.56" # 我的服务器公网IP地址
-    - "117.93.25.55" # 家
+    - "171.93.25.55" # 家
 
   # Pass Token配置 - 通过令牌绕过IP白名单限制
   pass-token-enabled: true  # 是否启用pass_token功能，生产环境建议设置为 true
