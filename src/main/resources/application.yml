@@ -15,7 +15,7 @@ spring:
   datasource:
     # 如果 PostgreSQL 服务要求 SSL 连接，请在 JDBC URL 中开启 ssl
     # "no encryption" 错误通常表示服务器要求加密连接（hostssl），客户端未使用 SSL
-    url: jdbc:postgresql://115.190.170.56:5432/postgres
+    url: jdbc:postgresql://localhost:5432/postgres
     username: postgres
     password: 375279901
     driver-class-name: org.postgresql.Driver
