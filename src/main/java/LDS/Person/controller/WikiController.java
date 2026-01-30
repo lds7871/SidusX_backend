@@ -254,7 +254,7 @@ public class WikiController {
      * @param request 更新请求
      * @return 更新后的 Wiki 响应
      */
-    @PutMapping("/{wikiId}")
+    @PutMapping("/update/{wikiId}")
     @Operation(summary = "更新指定 ID 的 Wiki")
     public ResponseEntity<?> updateWiki(@PathVariable Long wikiId, @RequestBody WikiUpdateRequest request) {
         try {
