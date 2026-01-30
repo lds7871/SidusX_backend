@@ -294,6 +294,105 @@ public class WikiServiceImpl implements WikiService {
     }
 
     /**
+     * 根据 Wiki ID 查询完整内容
+     */
+    @Override
+    public WikiResponse getWikiById(Long wikiId) {
+        if (wikiId == null || wikiId <= 0) {
+            log.warn("Wiki ID 无效: {}", wikiId);
+            return null;
+        }
+
+        Wiki wiki = selectById(wikiId);
+        if (wiki == null) {
+            log.debug("Wiki 不存在 - ID: {}", wikiId);
+            return null;
+        }
+
+        log.info("查询 Wiki 完整内容 - ID: {}, KeyName: {}", wikiId, wiki.getKeyName());
+        return convertToResponse(wiki);
+    }
+
+    /**
+     * 更新 Wiki 记录
+     */
+    @Override
+    @Transactional
+    public WikiResponse updateWiki(Long wikiId, LDS.Person.dto.request.WikiUpdateRequest request) {
+        // 验证 Wiki ID
+        if (wikiId == null || wikiId <= 0) {
+            log.warn("Wiki ID 无效: {}", wikiId);
+            throw new IllegalArgumentException("Wiki ID 无效");
+        }
+
+        // 验证必填字段
+        if (request.getUpdateUser() == null || request.getUpdateUser().trim().isEmpty()) {
+            log.warn("更新用户不能为空");
+            throw new IllegalArgumentException("更新用户不能为空");
+        }
+
+        // 检查 Wiki 是否存在
+        Wiki existingWiki = selectById(wikiId);
+        if (existingWiki == null) {
+            log.warn("Wiki 不存在 - ID: {}", wikiId);
+            throw new IllegalArgumentException("Wiki 不存在");
+        }
+
+        // 构建更新 SQL
+        StringBuilder sql = new StringBuilder("UPDATE wiki SET ");
+        List<Object> params = new ArrayList<>();
+        boolean hasUpdate = false;
+
+        // 更新 texts
+        if (request.getTexts() != null && !request.getTexts().trim().isEmpty()) {
+            sql.append("texts = ?, ");
+            params.add(request.getTexts().trim());
+            hasUpdate = true;
+        }
+
+        // 更新 tags
+        if (request.getTags() != null) {
+            sql.append("tags = ?::text[], ");
+            params.add(request.getTags());
+            hasUpdate = true;
+        }
+
+        // 更新 version
+        if (request.getVersion() != null) {
+            sql.append("version = ?, ");
+            params.add(request.getVersion());
+            hasUpdate = true;
+        }
+
+        if (!hasUpdate) {
+            log.warn("没有可更新的字段");
+            throw new IllegalArgumentException("至少需要提供一个可更新的字段（texts、tags 或 version）");
+        }
+
+        // 更新 update_user 和 update_time（必须更新）
+        sql.append("update_user = ?, ");
+        params.add(request.getUpdateUser().trim());
+
+        sql.append("update_time = NOW() ");
+
+        sql.append("WHERE wiki_id = ?");
+        params.add(wikiId);
+
+        // 执行更新
+        int result = jdbcTemplate.update(sql.toString(), params.toArray());
+        if (result <= 0) {
+            log.error("Wiki 更新失败 - ID: {}", wikiId);
+            throw new RuntimeException("Wiki 更新失败");
+        }
+
+        log.info("Wiki 更新成功 - ID: {}, UpdateUser: {}", wikiId, request.getUpdateUser());
+
+        // 查询更新后的记录
+        Wiki updatedWiki = selectById(wikiId);
+        return convertToResponse(updatedWiki);
+    }
+
+    /**
      * 查询符合条件的总记录数
      */
     private long countByCondition(WikiPageQueryRequest request) {

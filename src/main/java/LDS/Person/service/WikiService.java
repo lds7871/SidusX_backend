@@ -42,4 +42,21 @@ public interface WikiService {
      * @return true 表示键名已存在，false 表示不存在
      */
     boolean isKeyNameExists(String keyName);
+
+    /**
+     * 根据 Wiki ID 查询完整内容
+     * 
+     * @param wikiId Wiki ID
+     * @return Wiki 响应，如果不存在则返回 null
+     */
+    WikiResponse getWikiById(Long wikiId);
+
+    /**
+     * 更新 Wiki 记录
+     * 
+     * @param wikiId  Wiki ID
+     * @param request 更新请求
+     * @return 更新后的 Wiki 响应
+     */
+    WikiResponse updateWiki(Long wikiId, LDS.Person.dto.request.WikiUpdateRequest request);
 }

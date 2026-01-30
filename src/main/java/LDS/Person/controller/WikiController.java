@@ -3,6 +3,7 @@ package LDS.Person.controller;
 import LDS.Person.service.WikiService;
 import io.swagger.v3.oas.annotations.Operation;
 import LDS.Person.dto.request.WikiCreateRequest;
+import LDS.Person.dto.request.WikiUpdateRequest;
 import LDS.Person.dto.request.WikiPageQueryRequest;
 import LDS.Person.dto.response.WikiResponse;
 import LDS.Person.dto.response.PageResponse;
@@ -179,6 +180,95 @@ public class WikiController {
             log.error("Wiki 名称检查失败", ex);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(JsonResponse.failure("Wiki 名称检查失败"));
+        }
+    }
+
+    /**
+     * 根据 Wiki ID 查询完整内容
+     * 
+     * 请求示例：
+     * GET /GHapi/wiki/1
+     * 
+     * 响应示例（成功）：
+     * {
+     * "wiki_id": 1,
+     * "key_name": "java_basics",
+     * "texts": "Java 基础教程内容...",
+     * "tags": ["java", "programming"],
+     * "version": 1.0,
+     * "create_time": "2025-01-01 10:00:00",
+     * "create_user": "admin",
+     * "update_time": "2025-01-01 10:00:00",
+     * "update_user": "admin"
+     * }
+     * 
+     * @param wikiId Wiki ID
+     * @return Wiki 完整内容，如果不存在则返回 404
+     */
+    @GetMapping("/{wikiId}")
+    @Operation(summary = "根据 ID 查询 Wiki 完整内容")
+    @BypassIpWhitelist(reason = "Wiki 详情查询接口")
+    public ResponseEntity<?> getWikiById(@PathVariable Long wikiId) {
+        try {
+            log.info("查询 Wiki 详情 - ID: {}", wikiId);
+            WikiResponse response = wikiService.getWikiById(wikiId);
+
+            if (response == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(JsonResponse.failure("Wiki 不存在"));
+            }
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException ex) {
+            log.warn("Wiki 查询参数验证失败: {}", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(JsonResponse.failure(ex.getMessage()));
+        } catch (Exception ex) {
+            log.error("Wiki 查询失败", ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(JsonResponse.failure("Wiki 查询失败"));
+        }
+    }
+
+    /**
+     * 更新 Wiki 记录
+     * 
+     * 请求体示例：
+     * {
+     * "texts": "更新后的 Java 基础教程内容",
+     * "tags": ["java", "programming", "updated"],
+     * "version": 1.10,
+     * "update_user": "admin"
+     * }
+     * 
+     * 字段说明：
+     * - texts: Wiki 内容（可选）
+     * - tags: 标签数组（可选）
+     * - version: 版本号（可选）
+     * - update_user: 更新用户（必填）
+     * - update_time: 自动设置为当前时间
+     * 
+     * 至少需要提供 texts、tags 或 version 其中一个字段进行更新
+     * 
+     * @param wikiId  Wiki ID
+     * @param request 更新请求
+     * @return 更新后的 Wiki 响应
+     */
+    @PutMapping("/{wikiId}")
+    @Operation(summary = "更新指定 ID 的 Wiki")
+    public ResponseEntity<?> updateWiki(@PathVariable Long wikiId, @RequestBody WikiUpdateRequest request) {
+        try {
+            log.info("更新 Wiki - ID: {}, UpdateUser: {}", wikiId, request.getUpdateUser());
+            WikiResponse response = wikiService.updateWiki(wikiId, request);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException ex) {
+            log.warn("Wiki 更新参数验证失败: {}", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(JsonResponse.failure(ex.getMessage()));
+        } catch (Exception ex) {
+            log.error("Wiki 更新失败", ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(JsonResponse.failure("Wiki 更新失败: " + ex.getMessage()));
         }
     }
 
