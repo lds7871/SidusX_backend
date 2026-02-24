@@ -96,7 +96,6 @@ public class WikiNewController {
    */
   @PostMapping("/page")
   @Operation(summary = "分页查询 Wiki 新增列表")
-  @BypassIpWhitelist(reason = "Wiki 新增分页查询接口")
   public ResponseEntity<PageResponse<WikiNewListResponse>> pageQuery(@RequestBody WikiNewPageQueryRequest request) {
     try {
       log.info("分页查询 Wiki 新增 - Page: {}, PageSize: {}", request.getPage(), request.getPageSize());
@@ -134,7 +133,6 @@ public class WikiNewController {
    */
   @GetMapping("/{wikinewId}")
   @Operation(summary = "根据 ID 查询 Wiki 新增完整内容")
-  @BypassIpWhitelist(reason = "Wiki 新增详情查询接口")
   public ResponseEntity<?> getWikiNewById(@PathVariable Long wikinewId) {
     try {
       log.info("查询 Wiki 新增详情 - ID: {}", wikinewId);
@@ -154,47 +152,6 @@ public class WikiNewController {
       log.error("Wiki 新增查询失败", ex);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
           .body(JsonResponse.failure("Wiki 新增查询失败"));
-    }
-  }
-
-  /**
-   * 检查 Wiki 键名是否已存在
-   * 
-   * 请求示例：
-   * GET /GHapi/wiki-new/check-key-name?keyName=java_basics
-   * 
-   * 响应示例（存在）：
-   * {
-   * "exists": true,
-   * "message": "已有此名称！"
-   * }
-   * 
-   * @param keyName Wiki 键名
-   * @return JSON 响应，包含存在状态和提示信息
-   */
-  @GetMapping("/check-key-name")
-  @Operation(summary = "检查 Wiki 键名是否已存在")
-  @BypassIpWhitelist(reason = "Wiki 新增名称检查接口")
-  public ResponseEntity<?> checkKeyName(@RequestParam String keyName) {
-    try {
-      if (keyName == null || keyName.trim().isEmpty()) {
-        log.warn("Wiki 键名为空");
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body(JsonResponse.failure("Wiki 键名不能为空"));
-      }
-
-      log.info("检查 Wiki 新增键名 - KeyName: {}", keyName);
-      boolean exists = wikiNewService.isKeyNameExists(keyName.trim());
-
-      if (exists) {
-        return ResponseEntity.ok(new NameCheckResponse(true, "已有此名称！"));
-      } else {
-        return ResponseEntity.ok(new NameCheckResponse(false, "可创建的Wiki名称"));
-      }
-    } catch (Exception ex) {
-      log.error("Wiki 新增键名检查失败", ex);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(JsonResponse.failure("Wiki 新增键名检查失败"));
     }
   }
 
