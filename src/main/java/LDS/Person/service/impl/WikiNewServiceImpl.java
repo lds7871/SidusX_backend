@@ -128,14 +128,45 @@ public class WikiNewServiceImpl implements WikiNewService {
       return null;
     }
 
-    WikiNew wikiNew = wikiNewMapper.selectWikiNewById(wikinewId);
-    if (wikiNew == null) {
+    String sql = "SELECT wikinew_id, key_name, texts, tags, version, " +
+        "create_time, create_user, update_time, update_user, wiki_states " +
+        "FROM wiki_new WHERE wikinew_id = ?";
+
+    List<WikiNewResponse> results = jdbcTemplate.query(sql, new Object[] { wikinewId },
+        (rs, rowNum) -> {
+          WikiNewResponse response = new WikiNewResponse();
+          response.setWikinewId(rs.getLong("wikinew_id"));
+          response.setKeyName(rs.getString("key_name"));
+          response.setTexts(rs.getString("texts"));
+
+          // 处理 PostgreSQL 数组
+          java.sql.Array tagsArray = rs.getArray("tags");
+          if (tagsArray != null) {
+            response.setTags((String[]) tagsArray.getArray());
+          }
+
+          response.setVersion(rs.getDouble("version"));
+          response.setCreateTime(rs.getTimestamp("create_time") != null
+              ? rs.getTimestamp("create_time").toLocalDateTime().format(DATE_FORMATTER)
+              : null);
+          response.setCreateUser(rs.getString("create_user"));
+          response.setUpdateTime(rs.getTimestamp("update_time") != null
+              ? rs.getTimestamp("update_time").toLocalDateTime().format(DATE_FORMATTER)
+              : null);
+          response.setUpdateUser(rs.getString("update_user"));
+          response.setWikiStates(rs.getInt("wiki_states"));
+
+          return response;
+        });
+
+    if (results.isEmpty()) {
       log.debug("Wiki 新增不存在 - ID: {}", wikinewId);
       return null;
     }
 
-    log.info("查询 Wiki 新增完整内容 - ID: {}, KeyName: {}", wikinewId, wikiNew.getKeyName());
-    return convertToResponse(wikiNew);
+    WikiNewResponse response = results.get(0);
+    log.info("查询 Wiki 新增完整内容 - ID: {}, KeyName: {}", wikinewId, response.getKeyName());
+    return response;
   }
 
   /**
