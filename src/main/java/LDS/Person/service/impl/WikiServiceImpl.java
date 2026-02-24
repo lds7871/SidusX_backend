@@ -1,7 +1,9 @@
 package LDS.Person.service.impl;
 
 import LDS.Person.entity.Wiki;
+import LDS.Person.entity.WikiHistory;
 import LDS.Person.repository.WikiMapper;
+import LDS.Person.repository.WikiHistoryMapper;
 import LDS.Person.service.WikiService;
 import LDS.Person.dto.request.WikiCreateRequest;
 import LDS.Person.dto.request.WikiPageQueryRequest;
@@ -32,10 +34,12 @@ public class WikiServiceImpl implements WikiService {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final WikiMapper wikiMapper;
+    private final WikiHistoryMapper wikiHistoryMapper;
     private final JdbcTemplate jdbcTemplate;
 
-    public WikiServiceImpl(WikiMapper wikiMapper, JdbcTemplate jdbcTemplate) {
+    public WikiServiceImpl(WikiMapper wikiMapper, WikiHistoryMapper wikiHistoryMapper, JdbcTemplate jdbcTemplate) {
         this.wikiMapper = wikiMapper;
+        this.wikiHistoryMapper = wikiHistoryMapper;
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -100,6 +104,7 @@ public class WikiServiceImpl implements WikiService {
 
     /**
      * 删除 Wiki 记录
+     * 删除前会将当前内容备份到 wiki_history 表
      */
     @Override
     @Transactional
@@ -116,13 +121,40 @@ public class WikiServiceImpl implements WikiService {
             return false;
         }
 
-        int result = wikiMapper.deleteWikiById(wikiId);
-        if (result > 0) {
-            log.info("Wiki 删除成功 - ID: {}, KeyName: {}", wikiId, wiki.getKeyName());
-            return true;
-        } else {
-            log.error("Wiki 删除失败 - ID: {}", wikiId);
-            return false;
+        try {
+            // 备份 Wiki 内容到历史表
+            WikiHistory wikiHistory = new WikiHistory(
+                    wiki.getWikiId(),
+                    wiki.getKeyName(),
+                    wiki.getTexts(),
+                    wiki.getTags(),
+                    wiki.getVersion(),
+                    wiki.getCreateTime(),
+                    wiki.getCreateUser(),
+                    wiki.getUpdateTime(),
+                    wiki.getUpdateUser());
+
+            int historyResult = wikiHistoryMapper.insertWikiHistory(wikiHistory);
+            if (historyResult <= 0) {
+                log.error("Wiki 历史备份失败 - ID: {}, KeyName: {}", wikiId, wiki.getKeyName());
+                throw new RuntimeException("Wiki 历史备份失败");
+            }
+
+            log.info("Wiki 已备份至历史表 - ID: {}, HistoryID: {}, KeyName: {}",
+                    wikiId, wikiHistory.getHistoryId(), wiki.getKeyName());
+
+            // 删除原 Wiki 记录
+            int result = wikiMapper.deleteWikiById(wikiId);
+            if (result > 0) {
+                log.info("Wiki 删除成功 - ID: {}, KeyName: {}", wikiId, wiki.getKeyName());
+                return true;
+            } else {
+                log.error("Wiki 删除失败 - ID: {}", wikiId);
+                return false;
+            }
+        } catch (RuntimeException e) {
+            log.error("Wiki 删除过程中出错 - ID: {}", wikiId, e);
+            throw e;
         }
     }
 
