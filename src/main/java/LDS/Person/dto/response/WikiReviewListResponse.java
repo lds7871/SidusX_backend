@@ -37,4 +37,8 @@ public class WikiReviewListResponse {
   @JsonProperty("wiki_states")
   @Schema(description = "审核状态：0待审核，1通过，2拒绝")
   private Integer wikiStates;
+
+  @JsonProperty("key_name")
+  @Schema(description = "Wiki 键名")
+  private String keyName;
 }

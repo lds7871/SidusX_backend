@@ -325,6 +325,11 @@ public class WikiReviewServiceImpl implements WikiReviewService {
         response.setUpdateTime(review.getUpdateTime());
         response.setUpdateUser(review.getUpdateUser());
         response.setWikiStates(review.getWikiStates());
+        // 通过 wiki_id 查询对应的 key_name
+        Wiki wiki = queryWikiById(review.getWikiId());
+        if (wiki != null) {
+            response.setKeyName(wiki.getKeyName());
+        }
         return response;
     }
 
@@ -335,6 +340,11 @@ public class WikiReviewServiceImpl implements WikiReviewService {
         response.setTags(review.getTags());
         response.setUpdateTime(review.getUpdateTime());
         response.setWikiStates(review.getWikiStates());
+        // 通过 wiki_id 查询对应的 key_name
+        Wiki wiki = queryWikiById(review.getWikiId());
+        if (wiki != null) {
+            response.setKeyName(wiki.getKeyName());
+        }
         return response;
     }
 
