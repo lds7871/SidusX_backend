@@ -3,7 +3,6 @@ package LDS.Person.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
-import java.util.List;
 
 /**
  * Wiki 新增请求 DTO
@@ -21,7 +20,7 @@ public class WikiNewCreateRequest {
   private String texts;
 
   @Schema(description = "标签数组", example = "[\"java\", \"programming\"]")
-  private List<String> tags;
+  private String[] tags;
 
   @Schema(description = "创建用户（同时作为更新用户）", example = "admin", requiredMode = Schema.RequiredMode.REQUIRED)
   private String createUser;

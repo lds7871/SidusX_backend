@@ -20,7 +20,6 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -72,11 +71,10 @@ public class WikiNewServiceImpl implements WikiNewService {
     }
 
     // 创建 WikiNew 实体
-    String[] tagsArray = listToArray(request.getTags());
     WikiNew wikiNew = new WikiNew(
         request.getKeyName(),
         request.getTexts(),
-        tagsArray,
+        request.getTags(),
         request.getCreateUser().trim());
 
     // 保存到数据库
@@ -214,7 +212,7 @@ public class WikiNewServiceImpl implements WikiNewService {
     response.setWikinewId(wikiNew.getWikinewId());
     response.setKeyName(wikiNew.getKeyName());
     response.setTexts(wikiNew.getTexts());
-    response.setTags(arrayToList(wikiNew.getTags()));
+    response.setTags(wikiNew.getTags());
     response.setVersion(wikiNew.getVersion());
     response.setCreateTime(wikiNew.getCreateTime() != null ? wikiNew.getCreateTime().format(DATE_FORMATTER) : null);
     response.setCreateUser(wikiNew.getCreateUser());
@@ -222,26 +220,6 @@ public class WikiNewServiceImpl implements WikiNewService {
     response.setUpdateUser(wikiNew.getUpdateUser());
     response.setWikiStates(wikiNew.getWikiStates());
     return response;
-  }
-
-  /**
-   * 将数组转换为列表
-   */
-  private List<String> arrayToList(String[] array) {
-    if (array == null || array.length == 0) {
-      return new ArrayList<>();
-    }
-    return Arrays.asList(array);
-  }
-
-  /**
-   * 将列表转换为数组
-   */
-  private String[] listToArray(List<String> list) {
-    if (list == null || list.isEmpty()) {
-      return new String[0];
-    }
-    return list.toArray(new String[0]);
   }
 
   /**
@@ -257,10 +235,7 @@ public class WikiNewServiceImpl implements WikiNewService {
       // 处理 PostgreSQL 数组
       java.sql.Array tagsArray = rs.getArray("tags");
       if (tagsArray != null) {
-        String[] tagsArrayValue = (String[]) tagsArray.getArray();
-        response.setTags(Arrays.asList(tagsArrayValue));
-      } else {
-        response.setTags(new ArrayList<>());
+        response.setTags((String[]) tagsArray.getArray());
       }
 
       response.setCreateUser(rs.getString("create_user"));

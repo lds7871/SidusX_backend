@@ -3,7 +3,6 @@ package LDS.Person.dto.response;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
-import java.util.List;
 
 /**
  * Wiki 新增响应 DTO
@@ -23,7 +22,7 @@ public class WikiNewResponse {
   private String texts;
 
   @Schema(description = "标签数组")
-  private List<String> tags;
+  private String[] tags;
 
   @Schema(description = "版本号")
   private Double version;
