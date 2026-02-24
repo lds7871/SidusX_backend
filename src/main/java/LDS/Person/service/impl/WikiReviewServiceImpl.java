@@ -5,7 +5,10 @@ import LDS.Person.dto.request.WikiReviewPageQueryRequest;
 import LDS.Person.dto.request.WikiReviewUpdateRequest;
 import LDS.Person.dto.response.PageResponse;
 import LDS.Person.dto.response.WikiReviewResponse;
+import LDS.Person.entity.Wiki;
+import LDS.Person.entity.WikiHistory;
 import LDS.Person.entity.WikiReview;
+import LDS.Person.repository.WikiHistoryMapper;
 import LDS.Person.repository.WikiReviewMapper;
 import LDS.Person.service.WikiReviewService;
 import org.slf4j.Logger;
@@ -29,10 +32,13 @@ public class WikiReviewServiceImpl implements WikiReviewService {
     private static final String DEFAULT_USER = "system";
 
     private final WikiReviewMapper wikiReviewMapper;
+    private final WikiHistoryMapper wikiHistoryMapper;
     private final JdbcTemplate jdbcTemplate;
 
-    public WikiReviewServiceImpl(WikiReviewMapper wikiReviewMapper, JdbcTemplate jdbcTemplate) {
+    public WikiReviewServiceImpl(WikiReviewMapper wikiReviewMapper, WikiHistoryMapper wikiHistoryMapper,
+            JdbcTemplate jdbcTemplate) {
         this.wikiReviewMapper = wikiReviewMapper;
+        this.wikiHistoryMapper = wikiHistoryMapper;
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -67,7 +73,8 @@ public class WikiReviewServiceImpl implements WikiReviewService {
     public PageResponse<WikiReviewResponse> pageQuery(WikiReviewPageQueryRequest request) {
         int page = request.getPage() != null && request.getPage() > 0 ? request.getPage() : 1;
         int pageSize = request.getPageSize() != null && request.getPageSize() > 0 ? request.getPageSize() : 10;
-        if (pageSize > 100) pageSize = 100;
+        if (pageSize > 100)
+            pageSize = 100;
 
         int offset = (page - 1) * pageSize;
 
@@ -174,7 +181,8 @@ public class WikiReviewServiceImpl implements WikiReviewService {
         String updateUser = review.getUpdateUser(); // 从审核记录中获取提交时的用户
 
         // 2. 更新审核表状态
-        int updateResult = wikiReviewMapper.updateReviewStatus(request.getWikireviewId(), request.getWikiStates(), now, updateUser);
+        int updateResult = wikiReviewMapper.updateReviewStatus(request.getWikireviewId(), request.getWikiStates(), now,
+                updateUser);
         if (updateResult <= 0) {
             return false;
         }
@@ -192,8 +200,18 @@ public class WikiReviewServiceImpl implements WikiReviewService {
      * 覆盖 Wiki 表数据
      */
     private void overwriteWikiData(WikiReview review, LocalDateTime now, String user) {
+        // 1. 先查询wiki表的原始数据进行备份
+        Wiki originalWiki = queryWikiById(review.getWikiId());
+        if (originalWiki == null) {
+            throw new RuntimeException("要更新的 Wiki 记录不存在，Wiki ID: " + review.getWikiId());
+        }
+
+        // 2. 备份原始wiki数据到wiki_history表
+        backupWikiHistory(originalWiki);
+
+        // 3. 覆盖 Wiki 表数据
         String sql = "UPDATE wiki SET texts = ?, tags = ?, version = ?, update_time = ?, update_user = ? WHERE wiki_id = ?";
-        
+
         // 处理 PostgreSQL 数组
         java.sql.Array tagsArray = null;
         try {
@@ -204,18 +222,70 @@ public class WikiReviewServiceImpl implements WikiReviewService {
             log.error("创建 SQL 数组失败", e);
         }
 
-        int result = jdbcTemplate.update(sql, 
-            review.getTexts(), 
-            tagsArray, 
-            review.getVersion(), 
-            now, 
-            user, 
-            review.getWikiId()
-        );
+        int result = jdbcTemplate.update(sql,
+                review.getTexts(),
+                tagsArray,
+                review.getVersion(),
+                now,
+                user,
+                review.getWikiId());
 
         if (result <= 0) {
             throw new RuntimeException("覆盖 Wiki 数据失败，Wiki ID 可能不存在");
         }
+
+        log.info("Wiki 数据已成功覆盖并备份 - WikiID: {}", review.getWikiId());
+    }
+
+    /**
+     * 根据 Wiki ID 查询 Wiki 完整信息
+     */
+    private Wiki queryWikiById(Long wikiId) {
+        String sql = "SELECT wiki_id, key_name, texts, tags, version, create_time, create_user, update_time, update_user FROM wiki WHERE wiki_id = ?";
+        try {
+            return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
+                Wiki w = new Wiki();
+                w.setWikiId(rs.getLong("wiki_id"));
+                w.setKeyName(rs.getString("key_name"));
+                w.setTexts(rs.getString("texts"));
+                java.sql.Array arr = rs.getArray("tags");
+                if (arr != null) {
+                    w.setTags((String[]) arr.getArray());
+                }
+                w.setVersion(rs.getDouble("version"));
+                w.setCreateTime(rs.getTimestamp("create_time").toLocalDateTime());
+                w.setCreateUser(rs.getString("create_user"));
+                w.setUpdateTime(rs.getTimestamp("update_time").toLocalDateTime());
+                w.setUpdateUser(rs.getString("update_user"));
+                return w;
+            }, wikiId);
+        } catch (Exception e) {
+            log.error("查询 Wiki 数据失败，Wiki ID: {}", wikiId, e);
+            return null;
+        }
+    }
+
+    /**
+     * 备份 Wiki 数据到历史表
+     */
+    private void backupWikiHistory(Wiki wiki) {
+        WikiHistory history = new WikiHistory(
+                wiki.getWikiId(),
+                wiki.getKeyName(),
+                wiki.getTexts(),
+                wiki.getTags(),
+                wiki.getVersion(),
+                wiki.getCreateTime(),
+                wiki.getCreateUser(),
+                wiki.getUpdateTime(),
+                wiki.getUpdateUser());
+
+        int result = wikiHistoryMapper.insertWikiHistory(history);
+        if (result <= 0) {
+            throw new RuntimeException("备份 Wiki 历史数据失败，Wiki ID: " + wiki.getWikiId());
+        }
+
+        log.info("Wiki 原始数据已备份到历史表 - WikiID: {}, HistoryID: {}", wiki.getWikiId(), history.getHistoryId());
     }
 
     /**
