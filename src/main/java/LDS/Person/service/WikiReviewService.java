@@ -4,6 +4,7 @@ import LDS.Person.dto.request.WikiReviewCreateRequest;
 import LDS.Person.dto.request.WikiReviewPageQueryRequest;
 import LDS.Person.dto.request.WikiReviewUpdateRequest;
 import LDS.Person.dto.response.PageResponse;
+import LDS.Person.dto.response.WikiReviewListResponse;
 import LDS.Person.dto.response.WikiReviewResponse;
 
 /**
@@ -24,5 +25,10 @@ public interface WikiReviewService {
     /**
      * 分页查询审核记录
      */
-    PageResponse<WikiReviewResponse> pageQuery(WikiReviewPageQueryRequest request);
+    PageResponse<WikiReviewListResponse> pageQuery(WikiReviewPageQueryRequest request);
+
+    /**
+     * 根据审核 ID 获取审核详情
+     */
+    WikiReviewResponse getReviewDetail(Long wikireviewId);
 }

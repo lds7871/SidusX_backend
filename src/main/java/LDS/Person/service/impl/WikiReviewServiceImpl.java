@@ -4,6 +4,7 @@ import LDS.Person.dto.request.WikiReviewCreateRequest;
 import LDS.Person.dto.request.WikiReviewPageQueryRequest;
 import LDS.Person.dto.request.WikiReviewUpdateRequest;
 import LDS.Person.dto.response.PageResponse;
+import LDS.Person.dto.response.WikiReviewListResponse;
 import LDS.Person.dto.response.WikiReviewResponse;
 import LDS.Person.entity.Wiki;
 import LDS.Person.entity.WikiHistory;
@@ -70,7 +71,7 @@ public class WikiReviewServiceImpl implements WikiReviewService {
     }
 
     @Override
-    public PageResponse<WikiReviewResponse> pageQuery(WikiReviewPageQueryRequest request) {
+    public PageResponse<WikiReviewListResponse> pageQuery(WikiReviewPageQueryRequest request) {
         int page = request.getPage() != null && request.getPage() > 0 ? request.getPage() : 1;
         int pageSize = request.getPageSize() != null && request.getPageSize() > 0 ? request.getPageSize() : 10;
         if (pageSize > 100)
@@ -81,12 +82,12 @@ public class WikiReviewServiceImpl implements WikiReviewService {
         long total = countByCondition(request);
         List<WikiReview> list = selectPageList(request, offset, pageSize);
 
-        List<WikiReviewResponse> responses = list.stream()
-                .map(this::convertToResponse)
+        List<WikiReviewListResponse> responses = list.stream()
+                .map(this::convertToListResponse)
                 .collect(Collectors.toList());
 
         long totalPages = (total + pageSize - 1) / pageSize;
-        return new PageResponse<WikiReviewResponse>(page, pageSize, total, totalPages, responses);
+        return new PageResponse<WikiReviewListResponse>(page, pageSize, total, totalPages, responses);
     }
 
     /**
@@ -325,5 +326,27 @@ public class WikiReviewServiceImpl implements WikiReviewService {
         response.setUpdateUser(review.getUpdateUser());
         response.setWikiStates(review.getWikiStates());
         return response;
+    }
+
+    private WikiReviewListResponse convertToListResponse(WikiReview review) {
+        WikiReviewListResponse response = new WikiReviewListResponse();
+        response.setWikireviewId(review.getWikireviewId());
+        response.setWikiId(review.getWikiId());
+        response.setTags(review.getTags());
+        response.setUpdateTime(review.getUpdateTime());
+        response.setWikiStates(review.getWikiStates());
+        return response;
+    }
+
+    @Override
+    public WikiReviewResponse getReviewDetail(Long wikireviewId) {
+        if (wikireviewId == null) {
+            throw new IllegalArgumentException("审核 ID 不能为空");
+        }
+        WikiReview review = selectReviewById(wikireviewId);
+        if (review == null) {
+            throw new IllegalArgumentException("审核记录不存在");
+        }
+        return convertToResponse(review);
     }
 }

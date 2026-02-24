@@ -6,6 +6,7 @@ import LDS.Person.dto.request.WikiReviewPageQueryRequest;
 import LDS.Person.dto.request.WikiReviewUpdateRequest;
 import LDS.Person.dto.response.JsonResponse;
 import LDS.Person.dto.response.PageResponse;
+import LDS.Person.dto.response.WikiReviewListResponse;
 import LDS.Person.dto.response.WikiReviewResponse;
 import LDS.Person.service.WikiReviewService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -81,15 +82,35 @@ public class WikiReviewController {
      */
     @PostMapping("/page-modify")
     @Operation(summary = "分页查询 Wiki 修改审核记录")
-    public ResponseEntity<PageResponse<WikiReviewResponse>> pageQuery(@RequestBody WikiReviewPageQueryRequest request) {
+    public ResponseEntity<PageResponse<WikiReviewListResponse>> pageQuery(
+            @RequestBody WikiReviewPageQueryRequest request) {
         try {
             log.info("分页查询 Wiki 审核 - Page: {}, PageSize: {}, Status: {}",
                     request.getPage(), request.getPageSize(), request.getWikiStates());
-            PageResponse<WikiReviewResponse> response = wikiReviewService.pageQuery(request);
+            PageResponse<WikiReviewListResponse> response = wikiReviewService.pageQuery(request);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("分页查询审核记录失败", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * 获取 Wiki 审核详情
+     */
+    @GetMapping("/detail-modify/{wikireviewId}")
+    @Operation(summary = "获取 Wiki 修改审核详情")
+    public ResponseEntity<?> getReviewDetail(@PathVariable Long wikireviewId) {
+        try {
+            log.info("获取 Wiki 审核详情 - ReviewID: {}", wikireviewId);
+            WikiReviewResponse response = wikiReviewService.getReviewDetail(wikireviewId);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(JsonResponse.failure(e.getMessage()));
+        } catch (Exception e) {
+            log.error("获取审核详情失败", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(JsonResponse.failure("获取审核详情失败: " + e.getMessage()));
         }
     }
 }
