@@ -19,8 +19,8 @@ public class WikiNewListResponse {
   @Schema(description = "Wiki 键名")
   private String keyName;
 
-  @Schema(description = "标签数组")
-  private String[] tags;
+  @Schema(description = "标签，逗号分隔")
+  private String tags;
 
   @Schema(description = "创建用户")
   private String createUser;

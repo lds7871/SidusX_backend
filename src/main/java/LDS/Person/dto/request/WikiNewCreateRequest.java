@@ -19,8 +19,8 @@ public class WikiNewCreateRequest {
   @Schema(description = "Wiki 内容文本", example = "Java 基础教程内容", requiredMode = Schema.RequiredMode.REQUIRED)
   private String texts;
 
-  @Schema(description = "标签数组", example = "[\"java\", \"programming\"]")
-  private String[] tags;
+  @Schema(description = "标签，逗号分隔", example = "java,programming")
+  private String tags;
 
   @Schema(description = "创建用户（同时作为更新用户）", example = "admin", requiredMode = Schema.RequiredMode.REQUIRED)
   private String createUser;

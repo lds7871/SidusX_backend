@@ -21,8 +21,8 @@ public class WikiNewResponse {
   @Schema(description = "Wiki 内容文本")
   private String texts;
 
-  @Schema(description = "标签数组")
-  private String[] tags;
+  @Schema(description = "标签，逗号分隔")
+  private String tags;
 
   @Schema(description = "版本号")
   private Double version;

@@ -71,10 +71,11 @@ public class WikiNewServiceImpl implements WikiNewService {
     }
 
     // 创建 WikiNew 实体
+    String[] tagsArray = parseTags(request.getTags());
     WikiNew wikiNew = new WikiNew(
         request.getKeyName(),
         request.getTexts(),
-        request.getTags(),
+        tagsArray,
         request.getCreateUser().trim());
 
     // 保存到数据库
@@ -212,7 +213,7 @@ public class WikiNewServiceImpl implements WikiNewService {
     response.setWikinewId(wikiNew.getWikinewId());
     response.setKeyName(wikiNew.getKeyName());
     response.setTexts(wikiNew.getTexts());
-    response.setTags(wikiNew.getTags());
+    response.setTags(formatTags(wikiNew.getTags()));
     response.setVersion(wikiNew.getVersion());
     response.setCreateTime(wikiNew.getCreateTime() != null ? wikiNew.getCreateTime().format(DATE_FORMATTER) : null);
     response.setCreateUser(wikiNew.getCreateUser());
@@ -220,6 +221,26 @@ public class WikiNewServiceImpl implements WikiNewService {
     response.setUpdateUser(wikiNew.getUpdateUser());
     response.setWikiStates(wikiNew.getWikiStates());
     return response;
+  }
+
+  /**
+   * 将数组转换为逗号分隔的字符串
+   */
+  private String formatTags(String[] tags) {
+    if (tags == null || tags.length == 0) {
+      return null;
+    }
+    return String.join(",", tags);
+  }
+
+  /**
+   * 将逗号分隔的字符串转换为数组
+   */
+  private String[] parseTags(String tags) {
+    if (tags == null || tags.trim().isEmpty()) {
+      return new String[0];
+    }
+    return tags.split(",\\s*");
   }
 
   /**
@@ -235,7 +256,8 @@ public class WikiNewServiceImpl implements WikiNewService {
       // 处理 PostgreSQL 数组
       java.sql.Array tagsArray = rs.getArray("tags");
       if (tagsArray != null) {
-        response.setTags((String[]) tagsArray.getArray());
+        String[] tagsArrayValue = (String[]) tagsArray.getArray();
+        response.setTags(String.join(",", tagsArrayValue));
       }
 
       response.setCreateUser(rs.getString("create_user"));
