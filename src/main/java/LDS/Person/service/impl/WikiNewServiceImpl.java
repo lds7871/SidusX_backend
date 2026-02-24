@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -71,7 +72,7 @@ public class WikiNewServiceImpl implements WikiNewService {
     }
 
     // 创建 WikiNew 实体
-    String[] tagsArray = parseTags(request.getTags());
+    String[] tagsArray = listToArray(request.getTags());
     WikiNew wikiNew = new WikiNew(
         request.getKeyName(),
         request.getTexts(),
@@ -213,7 +214,7 @@ public class WikiNewServiceImpl implements WikiNewService {
     response.setWikinewId(wikiNew.getWikinewId());
     response.setKeyName(wikiNew.getKeyName());
     response.setTexts(wikiNew.getTexts());
-    response.setTags(formatTags(wikiNew.getTags()));
+    response.setTags(arrayToList(wikiNew.getTags()));
     response.setVersion(wikiNew.getVersion());
     response.setCreateTime(wikiNew.getCreateTime() != null ? wikiNew.getCreateTime().format(DATE_FORMATTER) : null);
     response.setCreateUser(wikiNew.getCreateUser());
@@ -224,23 +225,23 @@ public class WikiNewServiceImpl implements WikiNewService {
   }
 
   /**
-   * 将数组转换为逗号分隔的字符串
+   * 将数组转换为列表
    */
-  private String formatTags(String[] tags) {
-    if (tags == null || tags.length == 0) {
-      return null;
+  private List<String> arrayToList(String[] array) {
+    if (array == null || array.length == 0) {
+      return new ArrayList<>();
     }
-    return String.join(",", tags);
+    return Arrays.asList(array);
   }
 
   /**
-   * 将逗号分隔的字符串转换为数组
+   * 将列表转换为数组
    */
-  private String[] parseTags(String tags) {
-    if (tags == null || tags.trim().isEmpty()) {
+  private String[] listToArray(List<String> list) {
+    if (list == null || list.isEmpty()) {
       return new String[0];
     }
-    return tags.split(",\\s*");
+    return list.toArray(new String[0]);
   }
 
   /**
@@ -257,7 +258,9 @@ public class WikiNewServiceImpl implements WikiNewService {
       java.sql.Array tagsArray = rs.getArray("tags");
       if (tagsArray != null) {
         String[] tagsArrayValue = (String[]) tagsArray.getArray();
-        response.setTags(String.join(",", tagsArrayValue));
+        response.setTags(Arrays.asList(tagsArrayValue));
+      } else {
+        response.setTags(new ArrayList<>());
       }
 
       response.setCreateUser(rs.getString("create_user"));

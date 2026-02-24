@@ -3,6 +3,7 @@ package LDS.Person.dto.response;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
+import java.util.List;
 
 /**
  * Wiki 新增列表响应 DTO
@@ -19,8 +20,8 @@ public class WikiNewListResponse {
   @Schema(description = "Wiki 键名")
   private String keyName;
 
-  @Schema(description = "标签，逗号分隔")
-  private String tags;
+  @Schema(description = "标签数组")
+  private List<String> tags;
 
   @Schema(description = "创建用户")
   private String createUser;
