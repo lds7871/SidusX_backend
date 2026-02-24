@@ -156,7 +156,7 @@ COMMENT ON COLUMN wiki_review.update_user IS '更新用户id';
 COMMENT ON COLUMN wiki_review.wiki_states IS '审核状态，0待审核，1通过，2拒绝';
 
 -- 表注释
-COMMENT ON TABLE wiki_review IS 'Wiki审核内容表';
+COMMENT ON TABLE wiki_review IS 'Wiki审核修改内容表';
 
 -- #########################################################
 -- 创建wiki新增表                                            已创建
@@ -169,7 +169,8 @@ CREATE TABLE wiki_new (
     create_time TIMESTAMP NOT NULL DEFAULT NOW(), -- 创建时间
     create_user VARCHAR(100), -- 创建用户
     update_time TIMESTAMP NOT NULL DEFAULT NOW(), -- 更新时间
-    update_user VARCHAR(100) -- 最后更新用户
+    update_user VARCHAR(100), -- 最后更新用户
+    wiki_states INTEGER NOT NULL DEFAULT 0 -- 审核状态，0待审核，1通过，2拒绝
 );
 
 -- 字段注释
@@ -191,8 +192,52 @@ COMMENT ON COLUMN wiki_new.update_time IS '更新时间';
 
 COMMENT ON COLUMN wiki_new.update_user IS '更新用户id';
 
+COMMENT ON COLUMN wiki_new.wiki_states IS '审核状态，0待审核，1通过，2拒绝';
+
 -- 表注释
-COMMENT ON TABLE wiki_new IS 'WikiNEW内容表';
+COMMENT ON TABLE wiki_new IS 'Wiki审核新增内容表';
+
+-- #########################################################
+-- 创建 wiki 历史表                                       已创建
+CREATE TABLE wiki_history (
+    history_id BIGSERIAL PRIMARY KEY, -- 历史记录ID，自增主键
+    wiki_id BIGINT NOT NULL, -- 来源 wiki 主表ID（外键）
+    key_name VARCHAR(200) NOT NULL, -- 不唯一
+    texts TEXT NOT NULL, -- 文本内容
+    tags TEXT [], -- 标签
+    version NUMERIC(5, 2) NOT NULL, -- 历史版本号
+    create_time TIMESTAMP NOT NULL, -- 原创建时间
+    create_user VARCHAR(100), -- 原创建用户
+    update_time TIMESTAMP NOT NULL, -- 原更新时间
+    update_user VARCHAR(100), -- 原更新用户
+    backup_time TIMESTAMP NOT NULL DEFAULT NOW() -- 备份时间（历史记录创建时间）
+);
+
+-- 字段注释
+COMMENT ON COLUMN wiki_history.history_id IS '历史记录ID，自增主键';
+
+COMMENT ON COLUMN wiki_history.wiki_id IS '来源wiki主表ID';
+
+COMMENT ON COLUMN wiki_history.key_name IS 'Wiki键名（可重复）';
+
+COMMENT ON COLUMN wiki_history.texts IS '历史Wiki内容文本';
+
+COMMENT ON COLUMN wiki_history.tags IS '历史标签';
+
+COMMENT ON COLUMN wiki_history.version IS '历史版本号';
+
+COMMENT ON COLUMN wiki_history.create_time IS '原创建时间';
+
+COMMENT ON COLUMN wiki_history.create_user IS '原创建用户id';
+
+COMMENT ON COLUMN wiki_history.update_time IS '原更新时间';
+
+COMMENT ON COLUMN wiki_history.update_user IS '原更新用户id';
+
+COMMENT ON COLUMN wiki_history.backup_time IS '备份入历史表的时间';
+
+-- 表注释
+COMMENT ON TABLE wiki_history IS 'Wiki内容历史记录表';
 
 -- #########################################################
 -- 创建表 spacex_lunch

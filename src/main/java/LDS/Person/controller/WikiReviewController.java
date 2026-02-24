@@ -57,7 +57,7 @@ public class WikiReviewController {
      * 状态 2: 拒绝
      */
     @PostMapping("/update-status")
-    @Operation(summary = "更新 Wiki 审核状态")
+    @Operation(summary = "更新 Wiki 修改审核状态")
     public ResponseEntity<JsonResponse> updateStatus(@RequestBody WikiReviewUpdateRequest request) {
         try {
             log.info("更新审核状态 - ReviewID: {}, Status: {}", request.getWikireviewId(), request.getWikiStates());
@@ -79,7 +79,7 @@ public class WikiReviewController {
     /**
      * 分页查询 Wiki 审核记录
      */
-    @PostMapping("/page")
+    @PostMapping("/page-modify")
     @Operation(summary = "分页查询 Wiki 修改审核记录")
     public ResponseEntity<PageResponse<WikiReviewResponse>> pageQuery(@RequestBody WikiReviewPageQueryRequest request) {
         try {
