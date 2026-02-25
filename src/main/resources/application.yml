@@ -64,6 +64,24 @@ security:
   # 例如：export PASS_TOKENS="token1,token2,token3"
   pass-tokens: ${PASS_TOKENS}
 
+# 邮箱配置
+mail:
+  smtp:
+    host: smtp.qq.com
+    port: 587
+    username: 1964960588@qq.com
+    password: sxprmqmrhfkycaib
+    from: 1964960588@qq.com
+    protocol: smtp
+    timeout: 5000
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          starttls.class: javax.net.ssl.SSLSocketFactory
 
 logging:
   config: classpath:logback-spring.xml
