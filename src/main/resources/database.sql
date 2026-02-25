@@ -23,38 +23,40 @@ COMMENT ON COLUMN api_log.create_time IS '访问时间';
 COMMENT ON TABLE "api_log" IS '访问日志表';
 
 -- 11111111111111111111111111111111111111111111111111111111111111111111111111
--- 创建表 user
-CREATE TABLE "users" (
-    user_id BIGSERIAL PRIMARY KEY, -- 自增主键
+-- 用户表
+CREATE TABLE users (
+    user_id BIGSERIAL PRIMARY KEY, -- 用户ID，自增主键
     name VARCHAR(50) NOT NULL, -- 用户姓名
     cover BYTEA, -- 用户头像二进制数据
-    phone VARCHAR(20) UNIQUE, -- 手机号唯一
-    mail VARCHAR(100) UNIQUE, -- 邮箱唯一
-    password VARCHAR(100) NOT NULL, -- 密码（建议存哈希）
-    place VARCHAR(100), -- 地址或地区
-    achievement_json JSONB, -- 成就 JSON 数据
+    phone VARCHAR(20) UNIQUE, -- 手机号（唯一）
+    mail VARCHAR(100) UNIQUE, -- 邮箱（唯一）
+    password_hash VARCHAR(100) NOT NULL, -- 密码哈希
+    place VARCHAR(100), -- 用户所在地区
+    achievement_json JSONB NOT NULL DEFAULT '{}'::jsonb, -- 成就 JSON 数据
     expired_time TIMESTAMP -- 登录过期时间
 );
 
--- 字段注释
-COMMENT ON COLUMN "user".user_id IS '用户ID，自增主键';
-
-COMMENT ON COLUMN "user".name IS '用户姓名';
-
-COMMENT ON COLUMN "user".cover IS '用户头像二进制数据';
-
-COMMENT ON COLUMN "user".phone IS '手机号';
-
-COMMENT ON COLUMN "user".mail IS '邮箱';
-
-COMMENT ON COLUMN "user".password IS '用户密码（建议存储加密哈希）';
-
-COMMENT ON COLUMN "user".place IS '用户所在地区';
-
-COMMENT ON COLUMN "user".expired_time IS '登录过期时间';
-
 -- 表注释
-COMMENT ON TABLE "user" IS '用户信息表';
+COMMENT ON TABLE users IS '用户信息表';
+
+-- 字段注释
+COMMENT ON COLUMN users.user_id IS '用户ID，自增主键';
+
+COMMENT ON COLUMN users.name IS '用户姓名';
+
+COMMENT ON COLUMN users.cover IS '用户头像二进制数据';
+
+COMMENT ON COLUMN users.phone IS '手机号';
+
+COMMENT ON COLUMN users.mail IS '邮箱';
+
+COMMENT ON COLUMN users.password_hash IS '用户密码哈希';
+
+COMMENT ON COLUMN users.place IS '用户所在地区';
+
+COMMENT ON COLUMN users.achievement_json IS '成就 JSON 数据';
+
+COMMENT ON COLUMN users.expired_time IS '登录过期时间';
 
 -- 111111111111111111111111111111111111111111111111111111111111111111111
 -- 创建表 article                                         已创建
