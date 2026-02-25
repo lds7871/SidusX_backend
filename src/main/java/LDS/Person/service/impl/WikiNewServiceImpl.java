@@ -263,16 +263,30 @@ public class WikiNewServiceImpl implements WikiNewService {
       throw new IllegalArgumentException("该 Wiki 键名已存在，无法批准");
     }
 
-    // 插入到 wiki 表
+    // 构建 PostgreSQL 数组格式：'{val1,val2}'
+    String tagsArray = null;
+    if (wikiNewData.getTags() != null && wikiNewData.getTags().length > 0) {
+      StringBuilder sb = new StringBuilder("'{");
+      for (int i = 0; i < wikiNewData.getTags().length; i++) {
+        if (i > 0)
+          sb.append(",");
+        // PostgreSQL 数组字符串需要转义双引号
+        String tag = wikiNewData.getTags()[i].replace("'", "''");
+        sb.append("\"").append(tag).append("\"");
+      }
+      sb.append("}'");
+      tagsArray = sb.toString();
+    }
+
+    // 使用原生 SQL 通过 CAST 插入数组
     String insertSql = "INSERT INTO wiki (key_name, texts, tags, version, create_time, create_user, update_time, update_user) "
-        +
-        "VALUES (?, ?, ?, ?, NOW(), ?, NOW(), ?) RETURNING wiki_id";
+        + "VALUES (?, ?, ?::text[], ?, NOW(), ?, NOW(), ?) RETURNING wiki_id";
 
     Long generatedWikiId = jdbcTemplate.queryForObject(insertSql,
         new Object[] {
             wikiNewData.getKeyName(),
             wikiNewData.getTexts(),
-            wikiNewData.getTags(),
+            tagsArray,
             1.00,
             wikiNewData.getKeyName(), // 创建用户
             wikiNewData.getKeyName() // 更新用户

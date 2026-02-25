@@ -165,9 +165,7 @@ public class WikiNewController {
    * 请求体示例：
    * {
    * "wikinew_id": 1,
-   * "wiki_states": 1,
-   * "review_user": "admin",
-   * "remarks": "内容符合要求"
+   * "wiki_states": 1
    * }
    * 
    * 响应示例（批准成功）：

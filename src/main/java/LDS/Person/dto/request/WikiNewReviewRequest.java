@@ -18,10 +18,4 @@ public class WikiNewReviewRequest {
 
   @Schema(description = "审核状态（1: 批准, 2: 驳回）", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
   private Integer wikiStates;
-
-  @Schema(description = "审核用户（可选）", example = "admin")
-  private String reviewUser;
-
-  @Schema(description = "审核备注（可选）", example = "内容符合要求")
-  private String remarks;
 }
