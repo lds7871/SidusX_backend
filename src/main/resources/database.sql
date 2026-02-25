@@ -320,6 +320,28 @@ COMMENT ON COLUMN api_raw_logs.created_at IS '记录创建时间';
 COMMENT ON TABLE "api_raw_logs" IS 'API原始日志存储表';
 
 -- #########################################################
+-- 创建表 falcon_stats                            已创建
+CREATE TABLE falcon_stats (
+    falcon_id BIGSERIAL PRIMARY KEY, -- 自增主键                   
+    document_id TEXT NOT NULL, -- SpaceX 文档 ID
+    total_launches INTEGER NOT NULL, -- 发射次数
+    total_landings INTEGER NOT NULL, -- 着陆次数
+    total_reflights INTEGER NOT NULL, -- 复用次数
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP -- 本地插入时间
+);
+
+-- 为字段添加注释（PostgreSQL 原生 COMMENT）
+COMMENT ON TABLE falcon_stats IS 'SpaceX Falcon 系列火箭统计数据表';
+
+COMMENT ON COLUMN falcon_stats.document_id IS 'SpaceX API 返回的 documentId';
+
+COMMENT ON COLUMN falcon_stats.total_launches IS '总发射次数';
+
+COMMENT ON COLUMN falcon_stats.total_landings IS '总着陆次数';
+
+COMMENT ON COLUMN falcon_stats.total_reflights IS '总复用次数';
+
+COMMENT ON COLUMN falcon_stats.created_at IS '数据写入数据库的本地时间';
 
 -- #########################################################
 
