@@ -278,6 +278,9 @@ public class IpWhitelistInterceptor implements HandlerInterceptor {
      * 3. pass_token query parameter
      * 4. pass_token form parameter
      * 
+     * 验证方式：包含匹配（输入token包含配置的pass_token即可通过）
+     * 例如：配置pass_token="9901"，输入"21990187"也会通过验证
+     * 
      * @param request HTTP请求对象
      * @return true表示token有效，false表示无效或未启用
      */
@@ -294,12 +297,13 @@ public class IpWhitelistInterceptor implements HandlerInterceptor {
 
         // 获取有效的token集合
         Set<String> validTokens = getPassTokenSet();
-        boolean isValid = validTokens.contains(token);
+        // 使用包含匹配：检查输入的token是否包含任何一个配置的pass_token
+        boolean isValid = validTokens.stream().anyMatch(token::contains);
 
         if (isValid) {
-            log.debug("pass_token验证成功 - token: {}", maskToken(token));
+            log.debug("pass_token验证成功（包含匹配）- token: {}", maskToken(token));
         } else {
-            log.debug("pass_token验证失败 - 无效的token");
+            log.debug("pass_token验证失败 - 输入的token不包含任何有效的pass_token");
         }
 
         return isValid;
