@@ -173,15 +173,16 @@ public class WikiNewServiceImpl implements WikiNewService {
   }
 
   /**
-   * 检查 Wiki 键名是否已存在
+   * 检查 Wiki 键名是否已存在于 wiki 主表中
    */
   @Override
   public boolean isKeyNameExists(String keyName) {
     if (keyName == null || keyName.trim().isEmpty()) {
       return false;
     }
-    WikiNew wikiNew = wikiNewMapper.selectByKeyName(keyName.trim());
-    return wikiNew != null;
+    String sql = "SELECT COUNT(*) FROM wiki WHERE key_name = ?";
+    Long count = jdbcTemplate.queryForObject(sql, new Object[] { keyName.trim() }, Long.class);
+    return count != null && count > 0;
   }
 
   /**
