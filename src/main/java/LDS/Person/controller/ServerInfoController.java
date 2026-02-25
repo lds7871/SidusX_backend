@@ -1,6 +1,5 @@
 package LDS.Person.controller;
 
-
 import LDS.Person.entity.ApiLog;
 import LDS.Person.dto.request.ApiLogQueryRequest;
 import LDS.Person.dto.response.ApiLogResponse;
@@ -54,7 +53,7 @@ public class ServerInfoController {
         Map<String, Object> response = new HashMap<>();
         try {
             Map<String, Object> overviewData = new HashMap<>();
-            
+
             // 内存信息
             MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
             MemoryUsage heapMemory = memoryMXBean.getHeapMemoryUsage();
@@ -63,32 +62,32 @@ public class ServerInfoController {
             memSummary.put("堆最大_MB", heapMemory.getMax() / 1024 / 1024);
             memSummary.put("堆使用率", String.format("%.2f%%", (double) heapMemory.getUsed() / heapMemory.getMax() * 100));
             overviewData.put("内存概览", memSummary);
-            
+
             // CPU 和线程信息
             java.lang.management.OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
             Map<String, Object> cpuSummary = new HashMap<>();
             cpuSummary.put("可用处理器数", osBean.getAvailableProcessors());
             cpuSummary.put("系统负载平均值", osBean.getSystemLoadAverage());
             overviewData.put("CPU概览", cpuSummary);
-            
+
             // 线程信息
             Map<String, Object> threadSummary = new HashMap<>();
             ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
             threadSummary.put("当前线程数", threadMXBean.getThreadCount());
             threadSummary.put("峰值线程数", threadMXBean.getPeakThreadCount());
             overviewData.put("线程概览", threadSummary);
-            
+
             // JVM 版本
             Map<String, Object> jvmSummary = new HashMap<>();
             jvmSummary.put("Java版本", System.getProperty("java.version"));
             jvmSummary.put("JVM名称", System.getProperty("java.vm.name"));
             overviewData.put("JVM信息", jvmSummary);
-            
+
             response.put("状态码", 200);
             response.put("消息", "✅ 概览信息获取成功");
             response.put("数据", overviewData);
             response.put("时间戳", System.currentTimeMillis());
-            
+
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("❌ 获取概览信息失败", e);
@@ -167,22 +166,21 @@ public class ServerInfoController {
     @PostMapping("/apilog")
     @Operation(summary = "查询最近20条API日志", description = "返回最近20条API访问日志，支持按状态和时间范围筛选")
     public ResponseEntity<ApiLogSimpleResultResponse> queryApiLog(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "日志查询条件")
-            @RequestBody ApiLogQueryRequest queryRequest) {
-        
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "日志查询条件") @RequestBody ApiLogQueryRequest queryRequest) {
+
         try {
             // 构建查询SQL
             StringBuilder sql = new StringBuilder();
             List<Object> params = new ArrayList<>();
-            
+
             sql.append("SELECT id, ip, api, states, create_time FROM api_log WHERE 1=1 ");
-            
+
             // 按状态码筛选
             if (queryRequest.getStates() != null) {
                 sql.append("AND states = ? ");
                 params.add(queryRequest.getStates());
             }
-            
+
             // 按时间范围筛选
             if (queryRequest.getStartTime() != null && !queryRequest.getStartTime().isEmpty()) {
                 sql.append("AND create_time >= ? ");
@@ -192,10 +190,10 @@ public class ServerInfoController {
                 sql.append("AND create_time <= ? ");
                 params.add(LocalDateTime.parse(queryRequest.getEndTime().replace(" ", "T")));
             }
-            
+
             // 按时间倒序排列，只取最近20条
             sql.append("ORDER BY create_time DESC LIMIT 20");
-            
+
             // 执行查询
             java.util.List<ApiLog> logs = jdbcTemplate.query(sql.toString(), (rs, rowNum) -> {
                 ApiLog log = new ApiLog();
@@ -209,7 +207,7 @@ public class ServerInfoController {
                 }
                 return log;
             }, params.toArray(new Object[0]));
-            
+
             // 转换为响应DTO
             java.util.List<ApiLogResponse> logResponses = logs.stream()
                     .map(log -> {
@@ -222,14 +220,14 @@ public class ServerInfoController {
                         return response;
                     })
                     .collect(java.util.stream.Collectors.toList());
-            
+
             ApiLogSimpleResultResponse resultResponse = ApiLogSimpleResultResponse.builder()
                     .code(200)
                     .message("日志查询成功")
                     .data(logResponses)
                     .timestamp(System.currentTimeMillis())
                     .build();
-            
+
             return ResponseEntity.ok(resultResponse);
         } catch (Exception e) {
             log.error(" 日志查询失败", e);
@@ -252,28 +250,33 @@ public class ServerInfoController {
         Map<String, Object> response = new HashMap<>();
         try {
             Map<String, Object> counts = new HashMap<>();
-            
+
             // 查询 wiki 表总数
             Integer wikiCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM wiki", Integer.class);
             counts.put("wiki表", wikiCount != null ? wikiCount : 0);
-            
+
             // 查询 article 表总数
             Integer articleCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM article", Integer.class);
             counts.put("article表", articleCount != null ? articleCount : 0);
-            
+
             // 查询 nasa_daily_image 表总数
-            Integer nasaDailyImageCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM nasa_daily_image", Integer.class);
+            Integer nasaDailyImageCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM nasa_daily_image",
+                    Integer.class);
             counts.put("nasa_daily_image表", nasaDailyImageCount != null ? nasaDailyImageCount : 0);
-            
+
             // 查询 wiki_review 表总数
             Integer wikiReviewCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM wiki_review", Integer.class);
             counts.put("wiki_review表", wikiReviewCount != null ? wikiReviewCount : 0);
-            
+
+            // 查询 wiki_new 表总数
+            Integer wikiNewCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM wiki_new", Integer.class);
+            counts.put("wiki_new表", wikiNewCount != null ? wikiNewCount : 0);
+
             response.put("状态码", 200);
             response.put("消息", "✅ 数据表统计信息获取成功");
             response.put("数据", counts);
             response.put("时间戳", System.currentTimeMillis());
-            
+
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("❌ 获取数据表统计信息失败", e);
@@ -298,10 +301,10 @@ public class ServerInfoController {
             LocalDate currentDate = LocalDate.now().minusDays(1);
             String dateStr = currentDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
             String logFilePath = "C:\\Users\\Administrator\\Desktop\\ServerSync\\Nginx日志\\access(" + dateStr + ").log";
-            
+
             // 读取文件内容
             java.nio.file.Path path = Paths.get(logFilePath);
-            
+
             // 检查文件是否存在
             if (!Files.exists(path)) {
                 response.put("状态码", 404);
@@ -309,27 +312,27 @@ public class ServerInfoController {
                 response.put("时间戳", System.currentTimeMillis());
                 return ResponseEntity.status(404).body(response);
             }
-            
+
             // 读取所有行
             List<String> allLines = Files.readAllLines(path, StandardCharsets.UTF_8);
-            
+
             // 按limit限制返回的行数
             List<String> lines = new ArrayList<>();
             int startIndex = Math.max(0, allLines.size() - limit);
             for (int i = startIndex; i < allLines.size(); i++) {
                 lines.add(allLines.get(i));
             }
-            
+
             Map<String, Object> data = new HashMap<>();
             data.put("总行数", allLines.size());
             data.put("返回行数", lines.size());
             data.put("日志内容", lines);
-            
+
             response.put("状态码", 200);
             response.put("消息", "✅ Nginx日志读取成功");
             response.put("数据", data);
             response.put("时间戳", System.currentTimeMillis());
-            
+
             return ResponseEntity.ok(response);
         } catch (java.io.IOException e) {
             log.error("❌ 读取Nginx日志失败", e);
