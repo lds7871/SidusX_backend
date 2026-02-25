@@ -264,20 +264,24 @@ public class WikiNewServiceImpl implements WikiNewService {
       throw new IllegalArgumentException("该 Wiki 键名已存在，无法批准");
     }
 
-    // 构建 PostgreSQL 数组格式：'{val1,val2}'
+    // 构建 PostgreSQL 数组格式：{val1,val2}（不需要外层单引号）
     String tagsArray = null;
     if (wikiNewData.getTags() != null && wikiNewData.getTags().length > 0) {
-      StringBuilder sb = new StringBuilder("'{");
+      StringBuilder sb = new StringBuilder("{");
       for (int i = 0; i < wikiNewData.getTags().length; i++) {
         if (i > 0)
           sb.append(",");
-        // PostgreSQL 数组字符串需要转义双引号
-        String tag = wikiNewData.getTags()[i].replace("'", "''");
+        // PostgreSQL 数组字符串中需要用双引号包围，并转义内部的双引号
+        String tag = wikiNewData.getTags()[i].replace("\"", "\\\"");
         sb.append("\"").append(tag).append("\"");
       }
-      sb.append("}'");
+      sb.append("}");
       tagsArray = sb.toString();
+    } else {
+      tagsArray = "{}"; // 空数组
     }
+
+    log.debug("构建的 PostgreSQL 数组格式: {}", tagsArray);
 
     // 使用原生 SQL 通过 CAST 插入数组
     String insertSql = "INSERT INTO wiki (key_name, texts, tags, version, create_time, create_user, update_time, update_user) "
