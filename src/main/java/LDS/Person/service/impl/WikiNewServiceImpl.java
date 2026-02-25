@@ -5,8 +5,10 @@ import LDS.Person.repository.WikiNewMapper;
 import LDS.Person.service.WikiNewService;
 import LDS.Person.dto.request.WikiNewCreateRequest;
 import LDS.Person.dto.request.WikiNewPageQueryRequest;
+import LDS.Person.dto.request.WikiNewReviewRequest;
 import LDS.Person.dto.response.WikiNewResponse;
 import LDS.Person.dto.response.WikiNewListResponse;
+import LDS.Person.dto.response.WikiNewReviewResponse;
 import LDS.Person.dto.response.PageResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +23,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Arrays;
 
 /**
  * Wiki 新增业务逻辑实现类
@@ -179,6 +182,158 @@ public class WikiNewServiceImpl implements WikiNewService {
     }
     WikiNew wikiNew = wikiNewMapper.selectByKeyName(keyName.trim());
     return wikiNew != null;
+  }
+
+  /**
+   * 审核 Wiki 新增申请
+   * 批准（wikiStates=1）时将内容复制到 wiki 表
+   * 驳回（wikiStates=2）时仅更新状态
+   */
+  @Override
+  @Transactional
+  public WikiNewReviewResponse reviewWikiNew(WikiNewReviewRequest request) {
+    // 验证参数
+    if (request.getWikinewId() == null || request.getWikinewId() <= 0) {
+      log.warn("Wiki 新增 ID 无效: {}", request.getWikinewId());
+      throw new IllegalArgumentException("Wiki 新增 ID 无效");
+    }
+
+    if (request.getWikiStates() == null || (request.getWikiStates() != 1 && request.getWikiStates() != 2)) {
+      log.warn("审核状态无效，只能为 1（批准）或 2（驳回）：{}", request.getWikiStates());
+      throw new IllegalArgumentException("审核状态只能为 1（批准）或 2（驳回）");
+    }
+
+    // 查询 Wiki 新增记录
+    String selectSql = "SELECT wikinew_id, key_name, texts, tags, wiki_states " +
+        "FROM wiki_new WHERE wikinew_id = ?";
+    List<WikiNewData> results = jdbcTemplate.query(selectSql, new Object[] { request.getWikinewId() },
+        (rs, rowNum) -> {
+          WikiNewData data = new WikiNewData();
+          data.setWikinewId(rs.getLong("wikinew_id"));
+          data.setKeyName(rs.getString("key_name"));
+          data.setTexts(rs.getString("texts"));
+          java.sql.Array tagsArray = rs.getArray("tags");
+          if (tagsArray != null) {
+            data.setTags((String[]) tagsArray.getArray());
+          }
+          data.setWikiStates(rs.getInt("wiki_states"));
+          return data;
+        });
+
+    if (results.isEmpty()) {
+      log.warn("Wiki 新增不存在 - ID: {}", request.getWikinewId());
+      throw new IllegalArgumentException("Wiki 新增不存在");
+    }
+
+    WikiNewData wikiNewData = results.get(0);
+
+    // 验证当前状态为 0（待审核）
+    if (wikiNewData.getWikiStates() != 0) {
+      log.warn("Wiki 新增已审核，无法再次审核 - ID: {}, 当前状态: {}", request.getWikinewId(), wikiNewData.getWikiStates());
+      throw new IllegalArgumentException("该 Wiki 新增已审核，无法再次修改状态");
+    }
+
+    // 更新 wiki_new 表的状态
+    String updateSql = "UPDATE wiki_new SET wiki_states = ?, update_time = NOW() WHERE wikinew_id = ?";
+    int updateResult = jdbcTemplate.update(updateSql, request.getWikiStates(), request.getWikinewId());
+
+    if (updateResult <= 0) {
+      log.error("更新 Wiki 新增状态失败 - ID: {}", request.getWikinewId());
+      throw new RuntimeException("更新状态失败");
+    }
+
+    log.info("Wiki 新增审核状态已更新 - ID: {}, 新状态: {}", request.getWikinewId(), request.getWikiStates());
+
+    // 如果批准（状态为 1），则复制到 wiki 表
+    if (request.getWikiStates() == 1) {
+      return approveWikiNew(wikiNewData);
+    }
+
+    // 驳回（状态为 2）
+    return new WikiNewReviewResponse(request.getWikinewId(), 2, "Wiki 新增已驳回");
+  }
+
+  /**
+   * 批准 Wiki 新增，复制到 wiki 表
+   */
+  private WikiNewReviewResponse approveWikiNew(WikiNewData wikiNewData) {
+    // 验证键名唯一性（防止重复）
+    if (isKeyNameExists(wikiNewData.getKeyName())) {
+      log.warn("Wiki 键名已在 wiki 表中存在，不能批准 - KeyName: {}", wikiNewData.getKeyName());
+      throw new IllegalArgumentException("该 Wiki 键名已存在，无法批准");
+    }
+
+    // 插入到 wiki 表
+    String insertSql = "INSERT INTO wiki (key_name, texts, tags, version, create_time, create_user, update_time, update_user) "
+        +
+        "VALUES (?, ?, ?, ?, NOW(), ?, NOW(), ?) RETURNING wiki_id";
+
+    Long generatedWikiId = jdbcTemplate.queryForObject(insertSql,
+        new Object[] {
+            wikiNewData.getKeyName(),
+            wikiNewData.getTexts(),
+            wikiNewData.getTags(),
+            1.00,
+            wikiNewData.getKeyName(), // 创建用户
+            wikiNewData.getKeyName() // 更新用户
+        },
+        Long.class);
+
+    log.info("Wiki 新增已批准并复制到 wiki 表 - 原 ID: {}, 新 Wiki ID: {}", wikiNewData.getWikinewId(), generatedWikiId);
+
+    return new WikiNewReviewResponse(wikiNewData.getWikinewId(), 1, "Wiki 新增已批准并添加到主表", generatedWikiId);
+  }
+
+  /**
+   * 临时数据类，用于存储查询结果
+   */
+  private static class WikiNewData {
+    private Long wikinewId;
+    private String keyName;
+    private String texts;
+    private String[] tags;
+    private Integer wikiStates;
+
+    // Getters and Setters
+    public Long getWikinewId() {
+      return wikinewId;
+    }
+
+    public void setWikinewId(Long wikinewId) {
+      this.wikinewId = wikinewId;
+    }
+
+    public String getKeyName() {
+      return keyName;
+    }
+
+    public void setKeyName(String keyName) {
+      this.keyName = keyName;
+    }
+
+    public String getTexts() {
+      return texts;
+    }
+
+    public void setTexts(String texts) {
+      this.texts = texts;
+    }
+
+    public String[] getTags() {
+      return tags;
+    }
+
+    public void setTags(String[] tags) {
+      this.tags = tags;
+    }
+
+    public Integer getWikiStates() {
+      return wikiStates;
+    }
+
+    public void setWikiStates(Integer wikiStates) {
+      this.wikiStates = wikiStates;
+    }
   }
 
   /**

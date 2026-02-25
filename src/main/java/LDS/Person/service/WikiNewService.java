@@ -2,8 +2,10 @@ package LDS.Person.service;
 
 import LDS.Person.dto.request.WikiNewCreateRequest;
 import LDS.Person.dto.request.WikiNewPageQueryRequest;
+import LDS.Person.dto.request.WikiNewReviewRequest;
 import LDS.Person.dto.response.WikiNewResponse;
 import LDS.Person.dto.response.WikiNewListResponse;
+import LDS.Person.dto.response.WikiNewReviewResponse;
 import LDS.Person.dto.response.PageResponse;
 
 /**
@@ -43,4 +45,14 @@ public interface WikiNewService {
    * @return true 表示键名已存在，false 表示不存在
    */
   boolean isKeyNameExists(String keyName);
+
+  /**
+   * 审核 Wiki 新增申请
+   * 批准（wikiStates=1）时将内容复制到 wiki 表
+   * 驳回（wikiStates=2）时仅更新状态
+   * 
+   * @param request 审核请求
+   * @return 审核响应
+   */
+  WikiNewReviewResponse reviewWikiNew(WikiNewReviewRequest request);
 }

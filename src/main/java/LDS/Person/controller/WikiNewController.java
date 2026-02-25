@@ -5,8 +5,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import LDS.Person.dto.request.WikiNewCreateRequest;
 import LDS.Person.dto.request.WikiNewPageQueryRequest;
+import LDS.Person.dto.request.WikiNewReviewRequest;
 import LDS.Person.dto.response.WikiNewResponse;
 import LDS.Person.dto.response.WikiNewListResponse;
+import LDS.Person.dto.response.WikiNewReviewResponse;
 import LDS.Person.dto.response.PageResponse;
 import LDS.Person.dto.response.JsonResponse;
 import LDS.Person.config.BypassIpWhitelist;
@@ -152,6 +154,48 @@ public class WikiNewController {
       log.error("Wiki 新增查询失败", ex);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
           .body(JsonResponse.failure("Wiki 新增查询失败"));
+    }
+  }
+
+  /**
+   * 审核 Wiki 新增申请
+   * 批准（wiki_states=1）时将内容复制到 wiki 主表
+   * 驳回（wiki_states=2）时仅更新状态
+   * 
+   * 请求体示例：
+   * {
+   * "wikinew_id": 1,
+   * "wiki_states": 1,
+   * "review_user": "admin",
+   * "remarks": "内容符合要求"
+   * }
+   * 
+   * 响应示例（批准成功）：
+   * {
+   * "wikinew_id": 1,
+   * "wiki_states": 1,
+   * "message": "Wiki 新增已批准并添加到主表",
+   * "generated_wiki_id": 123
+   * }
+   * 
+   * @param request 审核请求
+   * @return 审核响应
+   */
+  @PostMapping("/review")
+  @Operation(summary = "审核 Wiki 新增申请（批准或驳回）")
+  public ResponseEntity<?> reviewWikiNew(@RequestBody WikiNewReviewRequest request) {
+    try {
+      log.info("审核 Wiki 新增 - ID: {}, 审核状态: {}", request.getWikinewId(), request.getWikiStates());
+      WikiNewReviewResponse response = wikiNewService.reviewWikiNew(request);
+      return ResponseEntity.ok(response);
+    } catch (IllegalArgumentException ex) {
+      log.warn("Wiki 新增审核参数验证失败: {}", ex.getMessage());
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(JsonResponse.failure(ex.getMessage()));
+    } catch (Exception ex) {
+      log.error("Wiki 新增审核失败", ex);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(JsonResponse.failure("Wiki 新增审核失败: " + ex.getMessage()));
     }
   }
 
