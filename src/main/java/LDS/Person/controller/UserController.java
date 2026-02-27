@@ -136,6 +136,7 @@ public class UserController {
      * 用户登出
      */
     @PostMapping("/logout")
+    @BypassIpWhitelist(reason = "登出")
     @Operation(summary = "用户登出", description = "清除Session并更新DB中的登录过期时间")
     public ResponseEntity<UserResultResponse> logout(HttpSession session) {
         try {
