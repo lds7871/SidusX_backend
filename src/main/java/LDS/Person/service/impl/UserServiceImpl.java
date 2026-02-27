@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.Base64;
 
 /**
  * 用户服务实现类
@@ -63,6 +64,46 @@ public class UserServiceImpl implements UserService {
 
     // ===================== 工具方法 =====================
 
+    /**
+     * 处理cover字段的格式转换
+     * 数据库中可能存在两种格式：
+     * 1. 错误格式：Base64编码的数字序列字符串 "MjU1LDIxNi..." → 需要解码并转换
+     * 2. 正确格式：直接的Base64编码 "/9j/4AAQSkZJRg..." → 直接使用
+     */
+    private String processCover(String coverFromDb) {
+        if (coverFromDb == null || coverFromDb.isEmpty()) {
+            return null;
+        }
+
+        try {
+            // 检查是否是错误格式（被Base64编码的数字序列）
+            if (coverFromDb.matches("^[A-Za-z0-9+/]+=*$")) {
+                try {
+                    String decoded = new String(Base64.getDecoder().decode(coverFromDb), StandardCharsets.UTF_8);
+                    // 检查是否是数字序列格式
+                    if (decoded.matches("^\\d{1,3}(,\\d{1,3})*$")) {
+                        // 这是错误格式，需要转换
+                        String[] numbers = decoded.split(",");
+                        byte[] bytes = new byte[numbers.length];
+                        for (int i = 0; i < numbers.length; i++) {
+                            bytes[i] = (byte) Integer.parseInt(numbers[i]);
+                        }
+                        // 重新编码为正确的Base64
+                        return Base64.getEncoder().encodeToString(bytes);
+                    }
+                } catch (Exception e) {
+                    // 不是错误格式，直接返回原值
+                    return coverFromDb;
+                }
+            }
+            // 正确格式，直接返回
+            return coverFromDb;
+        } catch (Exception e) {
+            logger.warn("处理cover字段出错: {}", e.getMessage());
+            return coverFromDb;
+        }
+    }
+
     private UserInfoResponse toInfoResponse(User user) {
         UserInfoResponse resp = new UserInfoResponse();
         resp.setUserId(user.getUserId());
@@ -72,9 +113,9 @@ public class UserServiceImpl implements UserService {
         resp.setPlace(user.getPlace());
         resp.setAchievementJson(user.getAchievementJson());
         resp.setExpiredTime(user.getExpiredTime());
-        // cover已在数据库查询时由PostgreSQL的encode()函数转换为Base64编码
+        // 处理cover字段，兼容两种格式
         if (user.getCover() != null && !user.getCover().isEmpty()) {
-            resp.setCover(user.getCover());
+            resp.setCover(processCover(user.getCover()));
         }
         return resp;
     }
@@ -258,5 +299,41 @@ public class UserServiceImpl implements UserService {
         verifyCodeStore.remove(mail);
 
         logger.info("密码修改成功 - userId: {}, mail: {}", user.getUserId(), mail);
+    }
+
+    @Override
+    public void updateCover(Long userId, String coverBase64) {
+        if (userId == null || userId <= 0) {
+            throw new IllegalArgumentException("用户ID不能为空或无效");
+        }
+        if (coverBase64 == null || coverBase64.isBlank()) {
+            throw new IllegalArgumentException("头像不能为空");
+        }
+
+        // 验证Base64格式（基本检查）
+        if (!coverBase64.matches("^[A-Za-z0-9+/]+=*$")) {
+            throw new IllegalArgumentException("头像格式不正确，必须是Base64编码");
+        }
+
+        try {
+            // 验证用户是否存在
+            User user = userMapper.selectById(userId);
+            if (user == null) {
+                throw new IllegalArgumentException("用户不存在");
+            }
+
+            // 更新头像（MyBatis会使用 decode() 函数将Base64转换为bytea）
+            int result = userMapper.updateCover(userId, coverBase64);
+            if (result <= 0) {
+                throw new RuntimeException("更新头像失败");
+            }
+
+            logger.info("用户头像更新成功 - userId: {}", userId);
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("更新用户头像出错 - userId: {}", userId, e);
+            throw new RuntimeException("更新头像失败: " + e.getMessage(), e);
+        }
     }
 }

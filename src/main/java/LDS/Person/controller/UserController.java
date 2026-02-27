@@ -39,7 +39,7 @@ public class UserController {
     @BypassIpWhitelist(reason = "公开接口 - 用户登录")
     @Operation(summary = "用户登录", description = "使用邮箱或手机号 + 密码登录，成功后写入Session并返回用户信息")
     public ResponseEntity<UserResultResponse> login(@RequestBody UserLoginRequest request,
-                                                    HttpSession session) {
+            HttpSession session) {
         try {
             UserInfoResponse info = userService.login(request, session);
             return ResponseEntity.ok(UserResultResponse.builder()
@@ -211,6 +211,38 @@ public class UserController {
                     .build());
         } catch (Exception e) {
             logger.error("修改密码异常", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(UserResultResponse.builder()
+                    .code(500)
+                    .message("修改失败: " + e.getMessage())
+                    .timestamp(System.currentTimeMillis())
+                    .build());
+        }
+    }
+
+    // ==================== 修改头像 ====================
+
+    /**
+     * 修改用户头像
+     */
+    @PostMapping("/cover/update")
+    @Operation(summary = "修改用户头像", description = "上传用户头像（Base64编码格式），覆盖现有头像")
+    public ResponseEntity<UserResultResponse> updateCover(@RequestBody UpdateCoverRequest request) {
+        try {
+            userService.updateCover(request.getUserId(), request.getCover());
+            return ResponseEntity.ok(UserResultResponse.builder()
+                    .code(200)
+                    .message("✅ 头像修改成功")
+                    .timestamp(System.currentTimeMillis())
+                    .build());
+        } catch (IllegalArgumentException e) {
+            logger.warn("修改头像失败: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(UserResultResponse.builder()
+                    .code(400)
+                    .message(e.getMessage())
+                    .timestamp(System.currentTimeMillis())
+                    .build());
+        } catch (Exception e) {
+            logger.error("修改头像异常", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(UserResultResponse.builder()
                     .code(500)
                     .message("修改失败: " + e.getMessage())

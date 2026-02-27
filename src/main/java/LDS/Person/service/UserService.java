@@ -57,4 +57,12 @@ public interface UserService {
      * @param request 包含邮箱、验证码、新密码的请求
      */
     void changePassword(ChangePasswordConfirmRequest request);
+
+    /**
+     * 修改用户头像
+     *
+     * @param userId      用户ID
+     * @param coverBase64 头像的Base64编码字符串
+     */
+    void updateCover(Long userId, String coverBase64);
 }

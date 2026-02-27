@@ -53,4 +53,7 @@ public interface UserMapper {
 
     @Update("UPDATE users SET password_hash = #{passwordHash} WHERE user_id = #{userId}")
     int updatePasswordHash(@Param("userId") Long userId, @Param("passwordHash") String passwordHash);
+
+    @Update("UPDATE users SET cover = decode(#{cover}, 'base64') WHERE user_id = #{userId}")
+    int updateCover(@Param("userId") Long userId, @Param("cover") String cover);
 }
