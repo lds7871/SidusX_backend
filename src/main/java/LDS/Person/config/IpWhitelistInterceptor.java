@@ -83,6 +83,13 @@ public class IpWhitelistInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
 
+        // 直接放行CORS预检请求（OPTIONS方法），不进行任何校验
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            log.debug("直接放行CORS预检请求 - 路径: {}", request.getRequestURI());
+            response.setStatus(HttpServletResponse.SC_OK);
+            return true;
+        }
+
         // 如果IP白名单功能已禁用，直接放行
         if (!securityConfig.isIpWhitelistEnabled()) {
             return true;
