@@ -1,6 +1,6 @@
 package LDS.Person.dto.response;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.annotation.JsonRawValue;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,8 +18,9 @@ public class RecentLaunchDataResponse {
   @Schema(description = "记录 ID", example = "5")
   private Long id;
 
+  @JsonRawValue
   @Schema(description = "完整发射数据（JSONB 原始内容）")
-  private JsonNode data;
+  private String data;
 
   @Schema(description = "数据获取时间", example = "2026-02-27 02:10:00")
   private String getTime;

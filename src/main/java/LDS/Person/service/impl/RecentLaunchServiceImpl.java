@@ -116,10 +116,9 @@ public class RecentLaunchServiceImpl implements RecentLaunchService {
         logger.warn("recent_launch 表内暂无数据");
         return null;
       }
-      JsonNode dataNode = objectMapper.readTree(latest.getData());
       RecentLaunchDataResponse response = new RecentLaunchDataResponse();
       response.setId(latest.getId());
-      response.setData(dataNode);
+      response.setData(latest.getData());
       LocalDateTime getTime = latest.getGetTime();
       if (getTime != null) {
         response.setGetTime(getTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
