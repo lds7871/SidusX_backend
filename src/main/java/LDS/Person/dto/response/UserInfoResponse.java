@@ -34,4 +34,7 @@ public class UserInfoResponse {
 
     @Schema(description = "登录过期时间")
     private LocalDateTime expiredTime;
+
+    @Schema(description = "用户头像（Base64编码）")
+    private String cover;
 }

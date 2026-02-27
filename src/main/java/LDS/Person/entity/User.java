@@ -30,7 +30,7 @@ public class User {
     @Schema(description = "用户密码哈希")
     private String passwordHash;
 
-    @Schema(description = "用户所在地区", example = "上海")
+    @Schema(description = "用户所在地区", example = "114.514")
     private String place;
 
     @Schema(description = "成就 JSON 数据")
