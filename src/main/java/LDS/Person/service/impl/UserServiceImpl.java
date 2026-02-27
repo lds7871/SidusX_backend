@@ -17,7 +17,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
-import java.util.Base64;
 
 /**
  * 用户服务实现类
@@ -73,9 +72,9 @@ public class UserServiceImpl implements UserService {
         resp.setPlace(user.getPlace());
         resp.setAchievementJson(user.getAchievementJson());
         resp.setExpiredTime(user.getExpiredTime());
-        // 将头像字节数据转换为 Base64 编码
-        if (user.getCover() != null && user.getCover().length > 0) {
-            resp.setCover(Base64.getEncoder().encodeToString(user.getCover()));
+        // cover已在数据库查询时由PostgreSQL的encode()函数转换为Base64编码
+        if (user.getCover() != null && !user.getCover().isEmpty()) {
+            resp.setCover(user.getCover());
         }
         return resp;
     }

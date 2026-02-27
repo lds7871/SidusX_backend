@@ -18,8 +18,8 @@ public class User {
     @Schema(description = "用户姓名", example = "张三")
     private String name;
 
-    @Schema(description = "用户头像二进制数据")
-    private byte[] cover;
+    @Schema(description = "用户头像（Base64编码格式）")
+    private String cover;
 
     @Schema(description = "手机号", example = "13800138000")
     private String phone;
