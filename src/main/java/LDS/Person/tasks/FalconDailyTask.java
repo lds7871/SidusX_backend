@@ -24,7 +24,7 @@ public class FalconDailyTask {
    * cron表达式: 0 5 2 * * ? 表示每天凌晨2点05分执行
    * 秒 分 时 日 月 周 年
    */
-  @Scheduled(cron = "0 35 10 * * ?")
+  @Scheduled(cron = "0 5 2 * * ?")
   public void fetchFalconStatsDaily() {
     logger.info("===== 开始执行 SpaceX Falcon 火箭统计数据定时任务 =====");
     try {

@@ -346,5 +346,18 @@ COMMENT ON COLUMN falcon_stats.total_reflights IS '总复用次数';
 COMMENT ON COLUMN falcon_stats.created_at IS '数据写入数据库的本地时间';
 
 -- #########################################################
+CREATE TABLE recent_launch (
+    id SERIAL PRIMARY KEY, -- 自增主键
+    data JSONB NOT NULL, -- 存储完整的发射数据 JSON
+    get_time TIMESTAMP NOT NULL DEFAULT NOW() -- 数据获取时间
+);
+
+COMMENT ON TABLE recent_launch IS '从API获取的最近一次发射数据表';
+
+COMMENT ON COLUMN recent_launch.id IS '发射主键，自增';
+
+COMMENT ON COLUMN recent_launch.data IS 'JSONB格式存储的完整发射数据';
+
+COMMENT ON COLUMN recent_launch.get_time IS '时间';
 
 -- #########################################################
