@@ -346,6 +346,7 @@ COMMENT ON COLUMN falcon_stats.total_reflights IS '总复用次数';
 COMMENT ON COLUMN falcon_stats.created_at IS '数据写入数据库的本地时间';
 
 -- #########################################################
+-- 创建表 recent_launch                                        已创建
 CREATE TABLE recent_launch (
     id SERIAL PRIMARY KEY, -- 自增主键
     data JSONB NOT NULL, -- 存储完整的发射数据 JSON
@@ -359,5 +360,40 @@ COMMENT ON COLUMN recent_launch.id IS '发射主键，自增';
 COMMENT ON COLUMN recent_launch.data IS 'JSONB格式存储的完整发射数据';
 
 COMMENT ON COLUMN recent_launch.get_time IS '时间';
+
+-- #########################################################
+-- 创建表 wiki_comment                                        已创建
+CREATE TABLE wiki_comment (
+    reply_id BIGSERIAL PRIMARY KEY, -- 自增主键
+    wiki_id BIGINT NOT NULL, -- 对应百科ID
+    user_id BIGINT NOT NULL, -- 用户ID
+    text TEXT NOT NULL, -- 留言内容
+    likes INT NOT NULL DEFAULT 0, -- 点赞数量
+    create_time TIMESTAMP NOT NULL DEFAULT NOW() -- 留言时间
+);
+
+COMMENT ON TABLE wiki_comment IS 'Wiki留言表';
+
+COMMENT ON COLUMN wiki_comment.reply_id IS '留言ID，自增主键';
+
+COMMENT ON COLUMN wiki_comment.wiki_id IS '对应百科ID';
+
+COMMENT ON COLUMN wiki_comment.user_id IS '留言用户ID';
+
+COMMENT ON COLUMN wiki_comment.text IS '留言内容';
+
+COMMENT ON COLUMN wiki_comment.create_time IS '留言时间';
+
+COMMENT ON COLUMN wiki_comment.likes IS '点赞数量';
+
+COMMENT ON TABLE "wiki_comment" IS 'Wiki留言表';
+
+-- #########################################################
+
+-- #########################################################
+
+-- #########################################################
+
+-- #########################################################
 
 -- #########################################################
