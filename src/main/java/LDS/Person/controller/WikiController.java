@@ -330,7 +330,6 @@ public class WikiController {
      * {
      * "wiki_id": 1,
      * "key_name": "java_basics",
-     * "texts": "Java 基础教程内容...",
      * "tags": ["java", "programming"],
      * "version": 1.0,
      * "create_time": "2025-01-01 10:00:00",
@@ -342,7 +341,7 @@ public class WikiController {
      * ]
      * }
      * 
-     * @return 分页响应格式，包含随机四个 Wiki 的完整内容
+     * @return 分页响应格式，仅返回随机四个 Wiki 的摘要（不包含 `texts` 字段）
      */
     @GetMapping("/random-list")
     @Operation(summary = "随机获取四个 Wiki 的列表")

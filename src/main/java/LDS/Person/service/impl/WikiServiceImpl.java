@@ -481,21 +481,21 @@ public class WikiServiceImpl implements WikiService {
     }
 
     /**
-     * 随机获取四个 Wiki 的列表（分页格式）
+     * 随机获取四个 Wiki 的列表（分页格式），返回简略信息不包含 `texts` 字段以减轻响应体大小
      */
     @Override
     public PageResponse<WikiResponse> getRandomWikis() {
         try {
-            String sql = "SELECT wiki_id, key_name, texts, tags, version, " +
+            String sql = "SELECT wiki_id, key_name, tags, version, " +
                     "create_time, create_user, update_time, update_user " +
                     "FROM wiki ORDER BY RANDOM() LIMIT 4";
 
-            List<Wiki> wikiList = jdbcTemplate.query(sql, new WikiRowMapper());
+            List<Wiki> wikiList = jdbcTemplate.query(sql, new WikiSummaryRowMapper());
 
             // 转换为响应对象
             List<WikiResponse> responseList = new ArrayList<>();
             for (Wiki wiki : wikiList) {
-                responseList.add(convertToResponse(wiki));
+                responseList.add(convertToResponseWithoutTexts(wiki));
             }
 
             long totalCount = wikiList.size();
@@ -511,8 +511,44 @@ public class WikiServiceImpl implements WikiService {
     }
 
     /**
-     * Wiki 行映射器
-     * 将 ResultSet 转换为 Wiki 对象
+     * Wiki 精简行映射器，仅映射不含 texts 的字段（用于随机列表）
+     */
+    private static class WikiSummaryRowMapper implements org.springframework.jdbc.core.RowMapper<Wiki> {
+        @Override
+        public Wiki mapRow(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
+            Wiki wiki = new Wiki();
+            wiki.setWikiId(rs.getLong("wiki_id"));
+            wiki.setKeyName(rs.getString("key_name"));
+
+            // 处理 PostgreSQL 数组类型
+            java.sql.Array sqlArray = rs.getArray("tags");
+            if (sqlArray != null) {
+                wiki.setTags((String[]) sqlArray.getArray());
+            }
+
+            wiki.setVersion(rs.getDouble("version"));
+
+            // 处理 Timestamp 转换为 LocalDateTime
+            java.sql.Timestamp createTime = rs.getTimestamp("create_time");
+            if (createTime != null) {
+                wiki.setCreateTime(createTime.toLocalDateTime());
+            }
+
+            wiki.setCreateUser(rs.getString("create_user"));
+
+            java.sql.Timestamp updateTime = rs.getTimestamp("update_time");
+            if (updateTime != null) {
+                wiki.setUpdateTime(updateTime.toLocalDateTime());
+            }
+
+            wiki.setUpdateUser(rs.getString("update_user"));
+
+            return wiki;
+        }
+    }
+
+    /**
+     * 完整的 Wiki 行映射器（用于需要全文字段的查询）
      */
     private static class WikiRowMapper implements org.springframework.jdbc.core.RowMapper<Wiki> {
         @Override
