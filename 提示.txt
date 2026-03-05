@@ -14,7 +14,7 @@ wiki============================================================================
 将此页面的文章信息分为 百科名称，内容，tags，create_user，update_user我需要你返回Json代码，其中create_user与update_user不需要修改：
 {
     "key_name": "百科名称",
-    "texts": "内容，内容为Markdown格式，尽可能精美",
+    "texts": "读取此页面，将以上内容汇总，并输出为Json可保存的格式，即“\n”这种，包含元素<h1><h2><h3><p><table><thead><tbody><ul><li><b>等常见html基础元素,
     "tags": "格式为["tag1","tag2"]标签1~3个",
     "create_user": "admin",
     "update_user": "admin"

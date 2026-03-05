@@ -462,6 +462,55 @@ public class WikiServiceImpl implements WikiService {
     }
 
     /**
+     * 随机获取一个 Wiki 的完整内容
+     */
+    @Override
+    public WikiResponse getRandomWiki() {
+        try {
+            String sql = "SELECT wiki_id, key_name, texts, tags, version, " +
+                    "create_time, create_user, update_time, update_user " +
+                    "FROM wiki ORDER BY RANDOM() LIMIT 1";
+
+            Wiki wiki = jdbcTemplate.queryForObject(sql, new WikiRowMapper());
+            log.info("随机获取 Wiki - ID: {}, KeyName: {}", wiki.getWikiId(), wiki.getKeyName());
+            return convertToResponse(wiki);
+        } catch (Exception e) {
+            log.debug("获取随机 Wiki 失败或没有可用记录", e);
+            return null;
+        }
+    }
+
+    /**
+     * 随机获取四个 Wiki 的列表（分页格式）
+     */
+    @Override
+    public PageResponse<WikiResponse> getRandomWikis() {
+        try {
+            String sql = "SELECT wiki_id, key_name, texts, tags, version, " +
+                    "create_time, create_user, update_time, update_user " +
+                    "FROM wiki ORDER BY RANDOM() LIMIT 4";
+
+            List<Wiki> wikiList = jdbcTemplate.query(sql, new WikiRowMapper());
+
+            // 转换为响应对象
+            List<WikiResponse> responseList = new ArrayList<>();
+            for (Wiki wiki : wikiList) {
+                responseList.add(convertToResponse(wiki));
+            }
+
+            long totalCount = wikiList.size();
+            log.info("随机获取 4 个 Wiki - 实际返回 {} 条", totalCount);
+
+            // 构建分页响应（固定4条，第1页）
+            return new PageResponse<WikiResponse>(1, 4, totalCount, 1L, responseList);
+        } catch (Exception e) {
+            log.error("获取随机 Wiki 列表失败", e);
+            // 返回空列表的分页响应
+            return new PageResponse<WikiResponse>(1, 4, 0L, 0L, new ArrayList<WikiResponse>());
+        }
+    }
+
+    /**
      * Wiki 行映射器
      * 将 ResultSet 转换为 Wiki 对象
      */

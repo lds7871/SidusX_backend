@@ -59,4 +59,18 @@ public interface WikiService {
      * @return 更新后的 Wiki 响应
      */
     WikiResponse updateWiki(Long wikiId, LDS.Person.dto.request.WikiUpdateRequest request);
+
+    /**
+     * 随机获取一个 Wiki 的完整内容
+     * 
+     * @return 随机选中的 Wiki 响应，如果不存在则返回 null
+     */
+    WikiResponse getRandomWiki();
+
+    /**
+     * 随机获取四个 Wiki 的列表（分页格式）
+     * 
+     * @return 包含四个随机 Wiki 的分页响应
+     */
+    PageResponse<WikiResponse> getRandomWikis();
 }

@@ -273,6 +273,92 @@ public class WikiController {
     }
 
     /**
+     * 随机获取一个 Wiki 的完整内容
+     * 
+     * 请求示例：
+     * GET /GHapi/wiki/random
+     * 
+     * 响应示例（成功）：
+     * {
+     * "wiki_id": 1,
+     * "key_name": "java_basics",
+     * "texts": "Java 基础教程内容...",
+     * "tags": ["java", "programming"],
+     * "version": 1.0,
+     * "create_time": "2025-01-01 10:00:00",
+     * "create_user": "admin",
+     * "update_time": "2025-01-01 10:00:00",
+     * "update_user": "admin"
+     * }
+     * 
+     * @return 随机 Wiki 完整内容，如果数据库为空则返回 404
+     */
+    @GetMapping("/random")
+    @Operation(summary = "随机获取一个 Wiki 的完整内容")
+    @BypassIpWhitelist(reason = "Wiki 随机查询接口")
+    public ResponseEntity<?> getRandomWiki() {
+        try {
+            log.info("随机获取 Wiki 详情");
+            WikiResponse response = wikiService.getRandomWiki();
+
+            if (response == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(JsonResponse.failure("暂无 Wiki 记录"));
+            }
+
+            return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            log.error("随机获取 Wiki 失败", ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(JsonResponse.failure("随机获取 Wiki 失败"));
+        }
+    }
+
+    /**
+     * 随机获取四个 Wiki 的列表（分页格式）
+     * 
+     * 请求示例：
+     * GET /GHapi/wiki/random-list
+     * 
+     * 响应示例（成功）：
+     * {
+     * "page": 1,
+     * "page_size": 4,
+     * "total_count": 4,
+     * "total_pages": 1,
+     * "data": [
+     * {
+     * "wiki_id": 1,
+     * "key_name": "java_basics",
+     * "texts": "Java 基础教程内容...",
+     * "tags": ["java", "programming"],
+     * "version": 1.0,
+     * "create_time": "2025-01-01 10:00:00",
+     * "create_user": "admin",
+     * "update_time": "2025-01-01 10:00:00",
+     * "update_user": "admin"
+     * },
+     * ...
+     * ]
+     * }
+     * 
+     * @return 分页响应格式，包含随机四个 Wiki 的完整内容
+     */
+    @GetMapping("/random-list")
+    @Operation(summary = "随机获取四个 Wiki 的列表")
+    @BypassIpWhitelist(reason = "Wiki 随机列表查询接口")
+    public ResponseEntity<PageResponse<WikiResponse>> getRandomWikis() {
+        try {
+            log.info("随机获取四个 Wiki 列表");
+            PageResponse<WikiResponse> response = wikiService.getRandomWikis();
+            return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            log.error("随机获取 Wiki 列表失败", ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
      * Wiki 名称检查响应类
      */
     public static class NameCheckResponse {
