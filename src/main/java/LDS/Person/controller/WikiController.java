@@ -1,5 +1,7 @@
 package LDS.Person.controller;
 
+import LDS.Person.entity.User;
+import LDS.Person.repository.UserMapper;
 import LDS.Person.service.WikiService;
 import io.swagger.v3.oas.annotations.Operation;
 import LDS.Person.dto.request.WikiCreateRequest;
@@ -15,6 +17,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
  * Wiki 控制层
  * 提供 Wiki 的增、删、查接口
@@ -26,9 +30,11 @@ public class WikiController {
     private static final Logger log = LoggerFactory.getLogger(WikiController.class);
 
     private final WikiService wikiService;
+    private final UserMapper userMapper;
 
-    public WikiController(WikiService wikiService) {
+    public WikiController(WikiService wikiService, UserMapper userMapper) {
         this.wikiService = wikiService;
+        this.userMapper = userMapper;
     }
 
     /**
@@ -55,6 +61,7 @@ public class WikiController {
         try {
             log.info("创建 Wiki - KeyName: {}", request.getKeyName());
             WikiResponse response = wikiService.createWiki(request);
+            enrichUserNames(response);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException ex) {
             log.warn("Wiki 创建参数验证失败: {}", ex.getMessage());
@@ -128,6 +135,7 @@ public class WikiController {
         try {
             log.info("分页查询 Wiki - Page: {}, PageSize: {}", request.getPage(), request.getPageSize());
             PageResponse<WikiResponse> response = wikiService.pageQuery(request);
+            enrichUserNames(response.getData());
             return ResponseEntity.ok(response);
         } catch (Exception ex) {
             log.error("Wiki 分页查询失败", ex);
@@ -218,6 +226,7 @@ public class WikiController {
                         .body(JsonResponse.failure("Wiki 不存在"));
             }
 
+            enrichUserNames(response);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException ex) {
             log.warn("Wiki 查询参数验证失败: {}", ex.getMessage());
@@ -260,6 +269,7 @@ public class WikiController {
         try {
             log.info("更新 Wiki - ID: {}, UpdateUser: {}", wikiId, request.getUpdateUser());
             WikiResponse response = wikiService.updateWiki(wikiId, request);
+            enrichUserNames(response);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException ex) {
             log.warn("Wiki 更新参数验证失败: {}", ex.getMessage());
@@ -306,6 +316,7 @@ public class WikiController {
                         .body(JsonResponse.failure("暂无 Wiki 记录"));
             }
 
+            enrichUserNames(response);
             return ResponseEntity.ok(response);
         } catch (Exception ex) {
             log.error("随机获取 Wiki 失败", ex);
@@ -350,11 +361,61 @@ public class WikiController {
         try {
             log.info("随机获取四个 Wiki 列表");
             PageResponse<WikiResponse> response = wikiService.getRandomWikis();
+            enrichUserNames(response.getData());
             return ResponseEntity.ok(response);
         } catch (Exception ex) {
             log.error("随机获取 Wiki 列表失败", ex);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    /**
+     * 将响应中的 create_user / update_user 从用户 ID 字符串转换为用户名称。
+     */
+    private void enrichUserNames(List<WikiResponse> responses) {
+        if (responses == null || responses.isEmpty()) {
+            return;
+        }
+        for (WikiResponse response : responses) {
+            enrichUserNames(response);
+        }
+    }
+
+    private void enrichUserNames(WikiResponse response) {
+        if (response == null) {
+            return;
+        }
+        response.setCreateUser(resolveUserName(response.getCreateUser()));
+        response.setUpdateUser(resolveUserName(response.getUpdateUser()));
+    }
+
+    private String resolveUserName(String userIdText) {
+        if (userIdText == null) {
+            return null;
+        }
+
+        String trimmed = userIdText.trim();
+        if (trimmed.isEmpty()) {
+            return userIdText;
+        }
+
+        try {
+            int userId = Integer.parseInt(trimmed);
+            if (userId <= 0) {
+                return userIdText;
+            }
+
+            User user = userMapper.selectById((long) userId);
+            if (user != null && user.getName() != null && !user.getName().trim().isEmpty()) {
+                return user.getName();
+            }
+        } catch (NumberFormatException ex) {
+            return userIdText;
+        } catch (Exception ex) {
+            log.warn("根据用户 ID 查询用户名失败: {}", userIdText, ex);
+        }
+
+        return userIdText;
     }
 
     /**
