@@ -205,7 +205,7 @@ public class WikiNewServiceImpl implements WikiNewService {
     }
 
     // 查询 Wiki 新增记录
-    String selectSql = "SELECT wikinew_id, key_name, texts, tags, wiki_states " +
+    String selectSql = "SELECT wikinew_id, key_name, texts, tags, create_user, update_user, wiki_states " +
         "FROM wiki_new WHERE wikinew_id = ?";
     List<WikiNewData> results = jdbcTemplate.query(selectSql, new Object[] { request.getWikinewId() },
         (rs, rowNum) -> {
@@ -217,6 +217,8 @@ public class WikiNewServiceImpl implements WikiNewService {
           if (tagsArray != null) {
             data.setTags((String[]) tagsArray.getArray());
           }
+          data.setCreateUser(rs.getString("create_user"));
+          data.setUpdateUser(rs.getString("update_user"));
           data.setWikiStates(rs.getInt("wiki_states"));
           return data;
         });
@@ -293,8 +295,8 @@ public class WikiNewServiceImpl implements WikiNewService {
             wikiNewData.getTexts(),
             tagsArray,
             1.00,
-            wikiNewData.getKeyName(), // 创建用户
-            wikiNewData.getKeyName() // 更新用户
+            wikiNewData.getCreateUser(), // 创建用户
+            wikiNewData.getUpdateUser() // 更新用户
         },
         Long.class);
 
@@ -311,6 +313,8 @@ public class WikiNewServiceImpl implements WikiNewService {
     private String keyName;
     private String texts;
     private String[] tags;
+    private String createUser;
+    private String updateUser;
     private Integer wikiStates;
 
     // Getters and Setters
@@ -344,6 +348,22 @@ public class WikiNewServiceImpl implements WikiNewService {
 
     public void setTags(String[] tags) {
       this.tags = tags;
+    }
+
+    public String getCreateUser() {
+      return createUser;
+    }
+
+    public void setCreateUser(String createUser) {
+      this.createUser = createUser;
+    }
+
+    public String getUpdateUser() {
+      return updateUser;
+    }
+
+    public void setUpdateUser(String updateUser) {
+      this.updateUser = updateUser;
     }
 
     public Integer getWikiStates() {
