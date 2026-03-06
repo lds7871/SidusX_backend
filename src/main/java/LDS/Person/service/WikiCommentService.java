@@ -1,6 +1,7 @@
 package LDS.Person.service;
 
 import LDS.Person.dto.request.WikiCommentByWikiIdRequest;
+import LDS.Person.dto.request.WikiCommentCreateRequest;
 import LDS.Person.dto.response.WikiCommentResponse;
 
 import java.util.List;
@@ -26,6 +27,14 @@ public interface WikiCommentService {
    * @return Wiki留言响应列表
    */
   List<WikiCommentResponse> getCommentsByWikiId(WikiCommentByWikiIdRequest request);
+
+  /**
+   * 添加Wiki留言
+   *
+   * @param request 留言请求（只包含wiki_id、user_id、text）
+   * @return true 添加成功，false 添加失败
+   */
+  boolean addComment(WikiCommentCreateRequest request);
 
   /**
    * 删除Wiki留言记录

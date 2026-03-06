@@ -2,6 +2,7 @@ package LDS.Person.controller;
 
 import LDS.Person.config.BypassIpWhitelist;
 import LDS.Person.dto.request.WikiCommentByWikiIdRequest;
+import LDS.Person.dto.request.WikiCommentCreateRequest;
 import LDS.Person.dto.response.JsonResponse;
 import LDS.Person.dto.response.WikiCommentResponse;
 import LDS.Person.service.WikiCommentService;
@@ -36,6 +37,49 @@ public class WikiCommentController {
   }
 
   /**
+   * 添加Wiki留言
+   *
+   * 请求体示例：
+   * {
+   * "wiki_id": 1,
+   * "user_id": 2,
+   * "text": "这是一条留言"
+   * }
+   *
+   * @param request 添加留言请求
+   * @return 添加结果
+   */
+  @PostMapping("/add")
+  @Operation(summary = "添加 Wiki 留言")
+  public ResponseEntity<?> addComment(@RequestBody WikiCommentCreateRequest request) {
+    try {
+      if (request == null || request.getWikiId() == null || request.getUserId() == null
+          || request.getText() == null || request.getText().trim().isEmpty()) {
+        log.warn("Wiki 留言添加参数为空");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(JsonResponse.failure("wiki_id、user_id、text 不能为空"));
+      }
+
+      log.info("添加 Wiki 留言 - WikiId: {}, UserId: {}", request.getWikiId(), request.getUserId());
+      boolean success = wikiCommentService.addComment(request);
+      if (!success) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(JsonResponse.failure("添加留言失败"));
+      }
+
+      return ResponseEntity.ok(JsonResponse.success("添加留言成功"));
+    } catch (IllegalArgumentException ex) {
+      log.warn("Wiki 留言添加参数验证失败: {}", ex.getMessage());
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(JsonResponse.failure(ex.getMessage()));
+    } catch (Exception ex) {
+      log.error("Wiki 留言添加失败", ex);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(JsonResponse.failure("Wiki 留言添加失败"));
+    }
+  }
+
+  /**
    * 根据 wiki_id 查询该 Wiki 下的所有留言
    * 返回留言内容、点赞数、留言时间，以及留言用户的 name 和 cover 字段
    *
@@ -48,7 +92,7 @@ public class WikiCommentController {
    * @return 留言列表
    */
   @PostMapping("/list")
-  @BypassIpWhitelist(reason = "Wiki 留言查询接口")
+  // @BypassIpWhitelist(reason = "Wiki 留言查询接口")
   @Operation(summary = "根据 wiki_id 查询 Wiki 留言列表")
   public ResponseEntity<?> listByWikiId(@RequestBody WikiCommentByWikiIdRequest request) {
     try {

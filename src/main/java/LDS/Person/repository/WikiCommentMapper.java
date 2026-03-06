@@ -20,8 +20,8 @@ public interface WikiCommentMapper {
    * @param wikiComment Wiki留言实体
    * @return 插入的记录数
    */
-  @Insert("INSERT INTO wiki_comment (wiki_id, user_id, text, likes, create_time) " +
-      "VALUES (#{wikiId}, #{userId}, #{text}, #{likes}, #{createTime})")
+  @Insert("INSERT INTO wiki_comment (wiki_id, user_id, text) " +
+      "VALUES (#{wikiId}, #{userId}, #{text})")
   @Options(useGeneratedKeys = true, keyProperty = "replyId", keyColumn = "reply_id")
   int insertWikiComment(WikiComment wikiComment);
 

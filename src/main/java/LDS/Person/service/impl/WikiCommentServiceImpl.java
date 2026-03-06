@@ -1,7 +1,9 @@
 package LDS.Person.service.impl;
 
 import LDS.Person.dto.request.WikiCommentByWikiIdRequest;
+import LDS.Person.dto.request.WikiCommentCreateRequest;
 import LDS.Person.dto.response.WikiCommentResponse;
+import LDS.Person.entity.WikiComment;
 import LDS.Person.repository.WikiCommentMapper;
 import LDS.Person.service.WikiCommentService;
 import org.slf4j.Logger;
@@ -72,6 +74,31 @@ public class WikiCommentServiceImpl implements WikiCommentService {
       return List.of();
     }
     return getCommentsByWikiId(request.getWikiId());
+  }
+
+  /**
+   * 添加Wiki留言
+   */
+  @Override
+  public boolean addComment(WikiCommentCreateRequest request) {
+    if (request == null || request.getWikiId() == null || request.getUserId() == null
+        || request.getText() == null || request.getText().trim().isEmpty()) {
+      throw new IllegalArgumentException("wiki_id、user_id、text 不能为空");
+    }
+
+    WikiComment wikiComment = new WikiComment();
+    wikiComment.setWikiId(request.getWikiId());
+    wikiComment.setUserId(request.getUserId());
+    wikiComment.setText(request.getText().trim());
+
+    try {
+      int result = wikiCommentMapper.insertWikiComment(wikiComment);
+      return result > 0;
+    } catch (Exception e) {
+      log.error("Failed to add wiki comment. wikiId: {}, userId: {}",
+          request.getWikiId(), request.getUserId(), e);
+      return false;
+    }
   }
 
   /**
