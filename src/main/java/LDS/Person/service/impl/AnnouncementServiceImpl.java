@@ -6,6 +6,8 @@ import LDS.Person.repository.AnnouncementMapper;
 import LDS.Person.service.AnnouncementService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,5 +39,13 @@ public class AnnouncementServiceImpl implements AnnouncementService {
       BeanUtils.copyProperties(ann, response);
       return response;
     }).collect(Collectors.toList());
+  }
+
+  @Override
+  public boolean addAnnouncement(String content) {
+    Announcement announcement = new Announcement();
+    announcement.setContent(content);
+    announcement.setCreateTime(LocalDateTime.now());
+    return announcementMapper.insert(announcement) > 0;
   }
 }
