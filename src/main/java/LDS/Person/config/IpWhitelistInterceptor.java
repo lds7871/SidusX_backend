@@ -113,15 +113,15 @@ public class IpWhitelistInterceptor implements HandlerInterceptor {
 
         // 检查handler是否是HandlerMethod
         if (!(handler instanceof HandlerMethod)) {
-            // 静态资源等 - 必须同时满足IP白名单与token有效
-            if (!isIpAllowed || !isTokenValid) {
-                log.warn("拒绝静态资源请求 - IP: {}, 路径: {}, 方法: {}, 原因: IP白名单或token校验失败",
+            // 静态资源等 - 只要IP白名单或token其中之一有效即可
+            if (!isIpAllowed && !isTokenValid) {
+                log.warn("拒绝静态资源请求 - IP: {}, 路径: {}, 方法: {}, 原因: IP不在白名单且pass_token无效",
                         clientIp, path, cachedRequest.getMethod());
 
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 response.setContentType("application/json;charset=UTF-8");
                 response.getWriter()
-                        .write("{\"error\":\"Access denied: IP whitelist and pass_token are both required\"}");
+                        .write("{\"error\":\"Access denied: IP whitelist or pass_token is required\"}");
                 response.getWriter().flush();
                 logAccess(clientIp, path, 0, cachedRequest);
                 return false;
@@ -142,22 +142,22 @@ public class IpWhitelistInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        // 非公共接口 - 必须同时满足IP白名单与pass_token
-        if (!isIpAllowed || !isTokenValid) {
-            log.warn("拒绝API请求 - IP: {}, 路径: {}, 方法: {}, 原因: IP白名单或token校验失败",
+        // 非公共接口 - 只要IP白名单或pass_token其中之一有效即可
+        if (!isIpAllowed && !isTokenValid) {
+            log.warn("拒绝API请求 - IP: {}, 路径: {}, 方法: {}, 原因: IP不在白名单且pass_token无效",
                     clientIp, path, cachedRequest.getMethod());
 
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.setContentType("application/json;charset=UTF-8");
             response.getWriter()
-                    .write("{\"error\":\"Access denied: IP whitelist and pass_token are both required\"}");
+                    .write("{\"error\":\"Access denied: IP whitelist or pass_token is required\"}");
             response.getWriter().flush();
             logAccess(clientIp, path, 0, cachedRequest);
             return false;
         }
 
-        // IP在白名单内且token有效，正常的API请求，放行并记录
-        log.debug("IP白名单与pass_token验证通过 - IP: {}, 路径: {}", clientIp, path);
+        // IP白名单或pass_token有效，正常的API请求，放行并记录
+        log.debug("IP白名单或pass_token验证通过 - IP: {}, 路径: {}", clientIp, path);
         logAccess(clientIp, path, 1, cachedRequest);
         return true;
     }

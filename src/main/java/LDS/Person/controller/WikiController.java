@@ -401,7 +401,10 @@ public class WikiController {
 
         try {
             int userId = Integer.parseInt(trimmed);
-            if (userId <= 0) {
+            if (userId == 0) {
+                return "admin";
+            }
+            if (userId < 0) {
                 return userIdText;
             }
 
