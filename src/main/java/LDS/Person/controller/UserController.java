@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,13 +21,15 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/GHapi/user")
 @Tag(name = "用户管理", description = "用户登录、注册、登出、修改密码接口")
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class UserController {
 
-    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+    private static final Logger log = LoggerFactory.getLogger(UserController.class);
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     // ==================== 登录 ====================
 
@@ -49,14 +50,14 @@ public class UserController {
                     .timestamp(System.currentTimeMillis())
                     .build());
         } catch (IllegalArgumentException e) {
-            logger.warn("用户登录失败: {}", e.getMessage());
+            log.warn("用户登录失败: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(UserResultResponse.builder()
                     .code(401)
                     .message(e.getMessage())
                     .timestamp(System.currentTimeMillis())
                     .build());
         } catch (Exception e) {
-            logger.error("用户登录异常", e);
+            log.error("用户登录异常", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(UserResultResponse.builder()
                     .code(500)
                     .message("登录失败: " + e.getMessage())
@@ -82,14 +83,14 @@ public class UserController {
                     .timestamp(System.currentTimeMillis())
                     .build());
         } catch (IllegalArgumentException e) {
-            logger.warn("发送注册验证码失败: {}", e.getMessage());
+            log.warn("发送注册验证码失败: {}", e.getMessage());
             return ResponseEntity.badRequest().body(UserResultResponse.builder()
                     .code(400)
                     .message(e.getMessage())
                     .timestamp(System.currentTimeMillis())
                     .build());
         } catch (Exception e) {
-            logger.error("发送注册验证码异常", e);
+            log.error("发送注册验证码异常", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(UserResultResponse.builder()
                     .code(500)
                     .message("发送失败: " + e.getMessage())
@@ -114,14 +115,14 @@ public class UserController {
                     .timestamp(System.currentTimeMillis())
                     .build());
         } catch (IllegalArgumentException e) {
-            logger.warn("注册确认失败: {}", e.getMessage());
+            log.warn("注册确认失败: {}", e.getMessage());
             return ResponseEntity.badRequest().body(UserResultResponse.builder()
                     .code(400)
                     .message(e.getMessage())
                     .timestamp(System.currentTimeMillis())
                     .build());
         } catch (Exception e) {
-            logger.error("注册确认异常", e);
+            log.error("注册确认异常", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(UserResultResponse.builder()
                     .code(500)
                     .message("注册失败: " + e.getMessage())
@@ -147,7 +148,7 @@ public class UserController {
                     .timestamp(System.currentTimeMillis())
                     .build());
         } catch (Exception e) {
-            logger.error("用户登出异常", e);
+            log.error("用户登出异常", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(UserResultResponse.builder()
                     .code(500)
                     .message("登出失败: " + e.getMessage())
@@ -173,14 +174,14 @@ public class UserController {
                     .timestamp(System.currentTimeMillis())
                     .build());
         } catch (IllegalArgumentException e) {
-            logger.warn("发送修改密码验证码失败: {}", e.getMessage());
+            log.warn("发送修改密码验证码失败: {}", e.getMessage());
             return ResponseEntity.badRequest().body(UserResultResponse.builder()
                     .code(400)
                     .message(e.getMessage())
                     .timestamp(System.currentTimeMillis())
                     .build());
         } catch (Exception e) {
-            logger.error("发送修改密码验证码异常", e);
+            log.error("发送修改密码验证码异常", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(UserResultResponse.builder()
                     .code(500)
                     .message("发送失败: " + e.getMessage())
@@ -204,14 +205,14 @@ public class UserController {
                     .timestamp(System.currentTimeMillis())
                     .build());
         } catch (IllegalArgumentException e) {
-            logger.warn("修改密码失败: {}", e.getMessage());
+            log.warn("修改密码失败: {}", e.getMessage());
             return ResponseEntity.badRequest().body(UserResultResponse.builder()
                     .code(400)
                     .message(e.getMessage())
                     .timestamp(System.currentTimeMillis())
                     .build());
         } catch (Exception e) {
-            logger.error("修改密码异常", e);
+            log.error("修改密码异常", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(UserResultResponse.builder()
                     .code(500)
                     .message("修改失败: " + e.getMessage())
@@ -236,14 +237,14 @@ public class UserController {
                     .timestamp(System.currentTimeMillis())
                     .build());
         } catch (IllegalArgumentException e) {
-            logger.warn("修改头像失败: {}", e.getMessage());
+            log.warn("修改头像失败: {}", e.getMessage());
             return ResponseEntity.badRequest().body(UserResultResponse.builder()
                     .code(400)
                     .message(e.getMessage())
                     .timestamp(System.currentTimeMillis())
                     .build());
         } catch (Exception e) {
-            logger.error("修改头像异常", e);
+            log.error("修改头像异常", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(UserResultResponse.builder()
                     .code(500)
                     .message("修改失败: " + e.getMessage())

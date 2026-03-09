@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import LDS.Person.config.BypassIpWhitelist;
 import org.springframework.http.ResponseEntity;
@@ -26,13 +25,15 @@ import LDS.Person.service.ArticleService;
 @RestController
 @RequestMapping("/GHapi/article")
 @Tag(name = "文章管理", description = "文章的查询和创建接口")
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class ArticleController {
 
-    private static final Logger logger = LoggerFactory.getLogger(ArticleController.class);
+    private static final Logger log = LoggerFactory.getLogger(ArticleController.class);
 
-    @Autowired
-    private ArticleService articleService;
+    private final ArticleService articleService;
+
+    public ArticleController(ArticleService articleService) {
+        this.articleService = articleService;
+    }
 
     /**
      * 分页查询文章
@@ -44,13 +45,13 @@ public class ArticleController {
     public ResponseEntity<PageResponse<ArticleListResponse>> queryArticles(
             @RequestBody ArticleQueryRequest queryRequest) {
         try {
-            logger.info("分页查询文章 - Page: {}, PageSize: {}, Title: {}, Tags: {}",
+            log.info("分页查询文章 - Page: {}, PageSize: {}, Title: {}, Tags: {}",
                     queryRequest.getPageNum(), queryRequest.getPageSize(), queryRequest.getTitle(),
                     queryRequest.getTags());
             PageResponse<ArticleListResponse> response = articleService.pageQuery(queryRequest);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            logger.error("分页查询文章失败", e);
+            log.error("分页查询文章失败", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -64,7 +65,7 @@ public class ArticleController {
     public ResponseEntity<ArticleResultResponse> getArticleById(
             @PathVariable Long articleId) {
         try {
-            logger.info("根据ID查询文章 - ArticleId: {}", articleId);
+            log.info("根据ID查询文章 - ArticleId: {}", articleId);
             Article article = articleService.getById(articleId);
 
             if (article != null) {
@@ -96,7 +97,7 @@ public class ArticleController {
                 return ResponseEntity.status(404).body(errorResponse);
             }
         } catch (Exception e) {
-            logger.error("❌ 查询文章失败", e);
+            log.error("❌ 查询文章失败", e);
             ArticleResultResponse errorResponse = ArticleResultResponse.builder()
                     .code(500)
                     .message("查询失败: " + e.getMessage())
@@ -114,7 +115,7 @@ public class ArticleController {
     @Operation(summary = "获取最新文章", description = "返回最新文章的ID、标题、简介与标签")
     public ResponseEntity<ArticleResultResponse> getLatestArticle() {
         try {
-            logger.info("查询最新文章");
+            log.info("查询最新文章");
             Article article = articleService.getLatestArticle();
 
             if (article != null) {
@@ -141,7 +142,7 @@ public class ArticleController {
                 return ResponseEntity.status(404).body(errorResponse);
             }
         } catch (Exception e) {
-            logger.error("❌ 获取最新文章失败", e);
+            log.error("❌ 获取最新文章失败", e);
             ArticleResultResponse errorResponse = ArticleResultResponse.builder()
                     .code(500)
                     .message("查询失败: " + e.getMessage())
@@ -159,7 +160,7 @@ public class ArticleController {
     public ResponseEntity<ArticleResultResponse> createArticle(
             @RequestBody ArticleCreateRequest createRequest) {
         try {
-            logger.info("创建文章 - Title: {}", createRequest.getTitle());
+            log.info("创建文章 - Title: {}", createRequest.getTitle());
             // 转换请求DTO为实体
             Article article = new Article();
             article.setTitle(createRequest.getTitle());
@@ -200,7 +201,7 @@ public class ArticleController {
                 return ResponseEntity.status(500).body(errorResponse);
             }
         } catch (Exception e) {
-            logger.error("❌ 文章创建失败", e);
+            log.error("❌ 文章创建失败", e);
             ArticleResultResponse errorResponse = ArticleResultResponse.builder()
                     .code(500)
                     .message("创建失败: " + e.getMessage())

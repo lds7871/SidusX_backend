@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/GHapi/deepseek")
 @Tag(name = "DeepSeek AI", description = "调用DeepSeek聊天补全API")
-//@CrossOrigin(origins = "*", maxAge = 3600)
 public class DeepSeekController {
 
     private static final Logger log = LoggerFactory.getLogger(DeepSeekController.class);
@@ -41,7 +40,6 @@ public class DeepSeekController {
     public ResponseEntity<DeepSeekChatResponse> chatWithDefault(
             @RequestBody DeepSeekChatRequest request) {
         
-        //log.info("收到DeepSeek聊天请求，问题: {}", request.getUserQuestion());
         
         try {
             // 验证请求参数
@@ -72,8 +70,6 @@ public class DeepSeekController {
                     request.getUserQuestion(), 
                     request.getSystemPrompt()
             );
-            
-            //log.info("DeepSeek API调用成功");
             
             return ResponseEntity.ok(
                 DeepSeekChatResponse.builder()
@@ -118,9 +114,6 @@ public class DeepSeekController {
                description = "使用自定义参数（temperature, max_tokens）调用DeepSeek API")
     public ResponseEntity<DeepSeekChatResponse> chatWithCustomParams(
             @RequestBody DeepSeekChatCustomRequest request) {
-        
-        //log.info("收到DeepSeek自定义参数聊天请求，问题: {}, 温度: {}, tokens: {}", 
-         //       request.getUserQuestion(), request.getTemperature(), request.getMaxTokens());
         
         try {
             // 验证请求参数
@@ -167,8 +160,6 @@ public class DeepSeekController {
                     request.getTemperature(),
                     request.getMaxTokens()
             );
-            
-            //log.info("DeepSeek API调用成功");
             
             return ResponseEntity.ok(
                 DeepSeekChatResponse.builder()
