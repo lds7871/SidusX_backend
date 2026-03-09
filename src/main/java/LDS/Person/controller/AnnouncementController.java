@@ -34,7 +34,6 @@ public class AnnouncementController {
     return announcementService.getRecentAnnouncements();
   }
 
-  @BypassIpWhitelist
   @PostMapping("/add")
   @Operation(summary = "新增公告")
   public String add(@RequestParam String content) {
