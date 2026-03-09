@@ -44,7 +44,7 @@ public class WikiCommentServiceImpl implements WikiCommentService {
         "wc.likes, " +
         "TO_CHAR(wc.create_time, 'YYYY-MM-DD HH24:MI:SS') as create_time, " +
         "u.name as user_name, " +
-        "u.cover as user_cover " +
+        "encode(u.cover, 'base64') as user_cover " +
         "FROM wiki_comment wc " +
         "LEFT JOIN users u ON wc.user_id = u.user_id " +
         "WHERE wc.wiki_id = ? " +
