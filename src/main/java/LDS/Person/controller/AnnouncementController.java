@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/announcement")
+@RequestMapping("/GHapi/announcement")
 @Tag(name = "系统公告接口", description = "公告查询相关接口")
 public class AnnouncementController {
 
