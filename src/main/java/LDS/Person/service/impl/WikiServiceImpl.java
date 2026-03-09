@@ -1,17 +1,21 @@
 package LDS.Person.service.impl;
 
+import LDS.Person.entity.User;
 import LDS.Person.entity.Wiki;
 import LDS.Person.entity.WikiHistory;
+import LDS.Person.repository.UserMapper;
 import LDS.Person.repository.WikiMapper;
 import LDS.Person.repository.WikiHistoryMapper;
 import LDS.Person.service.WikiService;
 import LDS.Person.dto.request.WikiCreateRequest;
 import LDS.Person.dto.request.WikiPageQueryRequest;
+import LDS.Person.dto.response.LatestWikiSummaryResponse;
 import LDS.Person.dto.response.WikiResponse;
 import LDS.Person.dto.response.PageResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,11 +40,14 @@ public class WikiServiceImpl implements WikiService {
     private final WikiMapper wikiMapper;
     private final WikiHistoryMapper wikiHistoryMapper;
     private final JdbcTemplate jdbcTemplate;
+    private final UserMapper userMapper;
 
-    public WikiServiceImpl(WikiMapper wikiMapper, WikiHistoryMapper wikiHistoryMapper, JdbcTemplate jdbcTemplate) {
+    public WikiServiceImpl(WikiMapper wikiMapper, WikiHistoryMapper wikiHistoryMapper, JdbcTemplate jdbcTemplate,
+            UserMapper userMapper) {
         this.wikiMapper = wikiMapper;
         this.wikiHistoryMapper = wikiHistoryMapper;
         this.jdbcTemplate = jdbcTemplate;
+        this.userMapper = userMapper;
     }
 
     /**
@@ -461,6 +468,39 @@ public class WikiServiceImpl implements WikiService {
         return count != null ? count : 0;
     }
 
+    private Wiki selectLatestUpdatedWiki() {
+        String sql = "SELECT wiki_id, key_name, texts, tags, version, create_time, create_user, " +
+                "update_time, update_user " +
+                "FROM wiki ORDER BY update_time DESC LIMIT 1";
+        try {
+            return jdbcTemplate.queryForObject(sql, new WikiSummaryRowMapper());
+        } catch (EmptyResultDataAccessException e) {
+            log.debug("Wiki 表中没有记录，无法获取最新更新项", e);
+            return null;
+        }
+    }
+
+    private String resolveUpdateUserName(String rawUpdateUser) {
+        if (rawUpdateUser == null || rawUpdateUser.trim().isEmpty()) {
+            return rawUpdateUser;
+        }
+
+        String trimmed = rawUpdateUser.trim();
+        try {
+            Integer userId = Integer.valueOf(trimmed);
+            User user = userMapper.selectById(userId.longValue());
+            if (user != null && user.getName() != null && !user.getName().trim().isEmpty()) {
+                return user.getName();
+            }
+        } catch (NumberFormatException ex) {
+            log.debug("update_user 不是数字: {}", trimmed);
+        } catch (Exception ex) {
+            log.warn("通过 user_id 查询用户名失败: {}", trimmed, ex);
+        }
+
+        return trimmed;
+    }
+
     /**
      * 随机获取一个 Wiki 的完整内容
      */
@@ -477,6 +517,32 @@ public class WikiServiceImpl implements WikiService {
         } catch (Exception e) {
             log.debug("获取随机 Wiki 失败或没有可用记录", e);
             return null;
+        }
+    }
+
+    /**
+     * 获取最后一次更新时间最新的 Wiki 简要信息
+     */
+    @Override
+    public LatestWikiSummaryResponse getLatestUpdatedWiki() {
+        try {
+            log.info("查询最新更新的 Wiki");
+            Wiki latest = selectLatestUpdatedWiki();
+            if (latest == null) {
+                log.debug("没有找到最近更新的 Wiki");
+                return null;
+            }
+
+            return LatestWikiSummaryResponse.builder()
+                    .wikiId(latest.getWikiId())
+                    .keyName(latest.getKeyName())
+                    .tags(latest.getTags())
+                    .version(latest.getVersion())
+                    .updateUser(resolveUpdateUserName(latest.getUpdateUser()))
+                    .build();
+        } catch (Exception e) {
+            log.error("获取最新更新 Wiki 失败", e);
+            throw new RuntimeException("获取最新更新 Wiki 失败", e);
         }
     }
 

@@ -27,17 +27,26 @@ public interface ArticleMapper {
     @Select("SELECT article_id, title, cover, info, texts, tags, create_time, update_time " +
             "FROM article WHERE article_id = #{articleId}")
     @Results({
-        @Result(property = "articleId", column = "article_id"),
-        @Result(property = "createTime", column = "create_time"),
-        @Result(property = "updateTime", column = "update_time")
+            @Result(property = "articleId", column = "article_id"),
+            @Result(property = "createTime", column = "create_time"),
+            @Result(property = "updateTime", column = "update_time")
     })
     Article selectById(Long articleId);
 
     @Select("SELECT article_id, title, cover, info, texts, tags, create_time, update_time FROM article")
     @Results({
-        @Result(property = "articleId", column = "article_id"),
-        @Result(property = "createTime", column = "create_time"),
-        @Result(property = "updateTime", column = "update_time")
+            @Result(property = "articleId", column = "article_id"),
+            @Result(property = "createTime", column = "create_time"),
+            @Result(property = "updateTime", column = "update_time")
     })
     List<Article> selectAll();
+
+    @Select("SELECT article_id, title, cover, info, texts, tags, create_time, update_time " +
+            "FROM article ORDER BY create_time DESC LIMIT 1")
+    @Results({
+            @Result(property = "articleId", column = "article_id"),
+            @Result(property = "createTime", column = "create_time"),
+            @Result(property = "updateTime", column = "update_time")
+    })
+    Article selectLatestArticle();
 }

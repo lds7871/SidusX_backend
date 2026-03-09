@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import LDS.Person.dto.request.WikiCreateRequest;
 import LDS.Person.dto.request.WikiUpdateRequest;
 import LDS.Person.dto.request.WikiPageQueryRequest;
+import LDS.Person.dto.response.LatestWikiSummaryResponse;
 import LDS.Person.dto.response.WikiResponse;
 import LDS.Person.dto.response.PageResponse;
 import LDS.Person.dto.response.JsonResponse;
@@ -322,6 +323,30 @@ public class WikiController {
             log.error("随机获取 Wiki 失败", ex);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(JsonResponse.failure("随机获取 Wiki 失败"));
+        }
+    }
+
+    /**
+     * 获取最后一次更新的 Wiki 元信息
+     */
+    @GetMapping("/latest-updated")
+    @Operation(summary = "获取最新更新的 Wiki 元信息")
+    @BypassIpWhitelist(reason = "Wiki 最新更新接口")
+    public ResponseEntity<JsonResponse> getLatestUpdatedWiki() {
+        try {
+            log.info("获取最新更新的 Wiki");
+            LatestWikiSummaryResponse latest = wikiService.getLatestUpdatedWiki();
+
+            if (latest == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(JsonResponse.failure("暂无 Wiki 记录"));
+            }
+
+            return ResponseEntity.ok(JsonResponse.success("最新更新 Wiki 获取成功", latest));
+        } catch (Exception ex) {
+            log.error("获取最新更新的 Wiki 失败", ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(JsonResponse.failure("获取最新更新的 Wiki 失败"));
         }
     }
 

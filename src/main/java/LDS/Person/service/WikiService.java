@@ -2,6 +2,7 @@ package LDS.Person.service;
 
 import LDS.Person.dto.request.WikiCreateRequest;
 import LDS.Person.dto.request.WikiPageQueryRequest;
+import LDS.Person.dto.response.LatestWikiSummaryResponse;
 import LDS.Person.dto.response.WikiResponse;
 import LDS.Person.dto.response.PageResponse;
 
@@ -73,4 +74,11 @@ public interface WikiService {
      * @return 包含四个随机 Wiki 的分页响应
      */
     PageResponse<WikiResponse> getRandomWikis();
+
+    /**
+     * 获取最新更新过的 Wiki 元信息
+     * 
+     * @return 最新更新 Wiki 的摘要数据
+     */
+    LatestWikiSummaryResponse getLatestUpdatedWiki();
 }

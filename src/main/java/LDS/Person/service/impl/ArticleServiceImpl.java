@@ -33,7 +33,8 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public PageResponse<ArticleResponse> queryArticleByPage(Integer pageNum, Integer pageSize, String title, String tags) {
+    public PageResponse<ArticleResponse> queryArticleByPage(Integer pageNum, Integer pageSize, String title,
+            String tags) {
         try {
             // 设置默认值
             if (pageNum == null || pageNum < 1) {
@@ -67,9 +68,8 @@ public class ArticleServiceImpl implements ArticleService {
 
             // 统计总数（使用相同的查询条件）
             String countSql = sql.toString().replace(
-                "SELECT article_id, title, cover, info, texts, tags, create_time, update_time FROM article",
-                "SELECT COUNT(*) FROM article"
-            );
+                    "SELECT article_id, title, cover, info, texts, tags, create_time, update_time FROM article",
+                    "SELECT COUNT(*) FROM article");
             Long total = jdbcTemplate.queryForObject(countSql, Long.class, params.toArray(new Object[0]));
             long totalCount = total != null ? total : 0;
 
@@ -116,7 +116,8 @@ public class ArticleServiceImpl implements ArticleService {
     public PageResponse<ArticleListResponse> pageQuery(ArticleQueryRequest request) {
         int page = request.getPageNum() != null && request.getPageNum() > 0 ? request.getPageNum() : 1;
         int pageSize = request.getPageSize() != null && request.getPageSize() > 0 ? request.getPageSize() : 10;
-        if (pageSize > 100) pageSize = 100;
+        if (pageSize > 100)
+            pageSize = 100;
 
         int offset = (page - 1) * pageSize;
 
@@ -226,5 +227,11 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public List<Article> list() {
         return articleMapper.selectAll();
+    }
+
+    @Override
+    public Article getLatestArticle() {
+        logger.info("✅ 查询最新文章");
+        return articleMapper.selectLatestArticle();
     }
 }

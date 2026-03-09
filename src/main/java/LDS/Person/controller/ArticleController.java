@@ -15,6 +15,7 @@ import LDS.Person.dto.request.ArticleQueryRequest;
 import LDS.Person.dto.response.ArticleResponse;
 import LDS.Person.dto.response.ArticleListResponse;
 import LDS.Person.dto.response.ArticleResultResponse;
+import LDS.Person.dto.response.ArticleLatestResponse;
 import LDS.Person.dto.response.PageResponse;
 import LDS.Person.service.ArticleService;
 
@@ -96,6 +97,51 @@ public class ArticleController {
             }
         } catch (Exception e) {
             logger.error("❌ 查询文章失败", e);
+            ArticleResultResponse errorResponse = ArticleResultResponse.builder()
+                    .code(500)
+                    .message("查询失败: " + e.getMessage())
+                    .timestamp(System.currentTimeMillis())
+                    .build();
+            return ResponseEntity.status(500).body(errorResponse);
+        }
+    }
+
+    /**
+     * 获取最新一篇文章的摘要信息
+     */
+    @GetMapping("/latest")
+    @BypassIpWhitelist(reason = "文章 最新文章接口")
+    @Operation(summary = "获取最新文章", description = "返回最新文章的ID、标题、简介与标签")
+    public ResponseEntity<ArticleResultResponse> getLatestArticle() {
+        try {
+            logger.info("查询最新文章");
+            Article article = articleService.getLatestArticle();
+
+            if (article != null) {
+                ArticleLatestResponse latestResponse = ArticleLatestResponse.builder()
+                        .articleId(article.getArticleId())
+                        .title(article.getTitle())
+                        .info(article.getInfo())
+                        .tags(article.getTags())
+                        .build();
+
+                ArticleResultResponse resultResponse = ArticleResultResponse.builder()
+                        .code(200)
+                        .message("✅ 最新文章获取成功")
+                        .data(latestResponse)
+                        .timestamp(System.currentTimeMillis())
+                        .build();
+                return ResponseEntity.ok(resultResponse);
+            } else {
+                ArticleResultResponse errorResponse = ArticleResultResponse.builder()
+                        .code(404)
+                        .message("暂无文章")
+                        .timestamp(System.currentTimeMillis())
+                        .build();
+                return ResponseEntity.status(404).body(errorResponse);
+            }
+        } catch (Exception e) {
+            logger.error("❌ 获取最新文章失败", e);
             ArticleResultResponse errorResponse = ArticleResultResponse.builder()
                     .code(500)
                     .message("查询失败: " + e.getMessage())

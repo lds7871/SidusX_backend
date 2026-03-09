@@ -16,10 +16,10 @@ public interface ArticleService {
     /**
      * 分页查询文章，支持按标题和标签模糊查询
      *
-     * @param pageNum 页码
+     * @param pageNum  页码
      * @param pageSize 每页记录数
-     * @param title 标题（模糊查询）
-     * @param tags 标签（模糊查询）
+     * @param title    标题（模糊查询）
+     * @param tags     标签（模糊查询）
      * @return 分页结果
      */
     PageResponse<ArticleResponse> queryArticleByPage(Integer pageNum, Integer pageSize, String title, String tags);
@@ -70,4 +70,11 @@ public interface ArticleService {
      * @return 文章列表
      */
     List<Article> list();
+
+    /**
+     * 获取最新创建的文章
+     *
+     * @return 最新文章
+     */
+    Article getLatestArticle();
 }
