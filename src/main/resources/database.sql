@@ -389,6 +389,22 @@ COMMENT ON COLUMN wiki_comment.likes IS '点赞数量';
 COMMENT ON TABLE "wiki_comment" IS 'Wiki留言表';
 
 -- #########################################################
+-- 创建表 announcement                                        已创建
+CREATE TABLE announcement (
+    ann_id BIGSERIAL PRIMARY KEY, -- 公告ID，自增主键
+    content TEXT NOT NULL, -- 公告内容
+    create_time TIMESTAMP NOT NULL DEFAULT NOW() -- 创建时间
+);
+
+-- 表注释
+COMMENT ON TABLE announcement IS '公告表，用于存储系统公告内容';
+
+-- 字段注释
+COMMENT ON COLUMN announcement.ann_id IS '公告ID，自增主键';
+
+COMMENT ON COLUMN announcement.content IS '公告内容';
+
+COMMENT ON COLUMN announcement.create_time IS '公告创建时间';
 
 -- #########################################################
 
