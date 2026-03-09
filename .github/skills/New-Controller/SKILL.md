@@ -10,3 +10,4 @@ description: 如果需要新建控制层时，需要用到此技巧.
 3. 如果需要引入config.properties内的变量，从config文件夹的ConfigManager.java读取。
 4. 此项目为JDK25+SpringBoot4.0.1。
 5. 如果要实现分页查询，使用使用 JdbcTemplate和mybatis手动完成实现，不使用mybatisplus，它不支持JDK25。
+6. 新建的接口使用GHapi/开头。
