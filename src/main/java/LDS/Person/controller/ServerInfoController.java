@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -36,13 +35,15 @@ import java.util.Map;
 @RestController
 @RequestMapping("/GHapi/serverinfo")
 @Tag(name = "服务监控", description = "获取服务信息")
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class ServerInfoController {
 
     private static final Logger log = LoggerFactory.getLogger(ServerInfoController.class);
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
+
+    public ServerInfoController(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
     /**
      * 获取完整的 JVM 和系统概览

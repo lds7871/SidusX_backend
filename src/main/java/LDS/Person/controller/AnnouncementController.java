@@ -14,30 +14,30 @@ import java.util.List;
 @Tag(name = "系统公告接口", description = "公告查询相关接口")
 public class AnnouncementController {
 
-  private final AnnouncementService announcementService;
+    private final AnnouncementService announcementService;
 
-  public AnnouncementController(AnnouncementService announcementService) {
-    this.announcementService = announcementService;
-  }
+    public AnnouncementController(AnnouncementService announcementService) {
+        this.announcementService = announcementService;
+    }
 
-  @BypassIpWhitelist
-  @GetMapping("/latest")
-  @Operation(summary = "显示最新的一条公告")
-  public AnnouncementResponse getLatest() {
-    return announcementService.getLatestAnnouncement();
-  }
+    @BypassIpWhitelist
+    @GetMapping("/latest")
+    @Operation(summary = "显示最新的一条公告")
+    public AnnouncementResponse getLatest() {
+        return announcementService.getLatestAnnouncement();
+    }
 
-  @BypassIpWhitelist
-  @GetMapping("/recent")
-  @Operation(summary = "显示最近五条公告")
-  public List<AnnouncementResponse> getRecent() {
-    return announcementService.getRecentAnnouncements();
-  }
+    @BypassIpWhitelist
+    @GetMapping("/recent")
+    @Operation(summary = "显示最近五条公告")
+    public List<AnnouncementResponse> getRecent() {
+        return announcementService.getRecentAnnouncements();
+    }
 
-  @PostMapping("/add")
-  @Operation(summary = "新增公告")
-  public String add(@RequestParam String content) {
-    boolean success = announcementService.addAnnouncement(content);
-    return success ? "添加成功" : "添加失败";
-  }
+    @PostMapping("/add")
+    @Operation(summary = "新增公告")
+    public String add(@RequestParam String content) {
+        boolean success = announcementService.addAnnouncement(content);
+        return success ? "添加成功" : "添加失败";
+    }
 }

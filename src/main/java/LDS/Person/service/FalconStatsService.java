@@ -9,31 +9,31 @@ import java.util.List;
  */
 public interface FalconStatsService {
 
-  /**
-   * 获取并保存Falcon统计数据
-   */
-  void fetchAndSaveFalconStats();
+    /**
+     * 获取并保存Falcon统计数据
+     */
+    void fetchAndSaveFalconStats();
 
-  /**
-   * 保存Falcon统计数据
-   *
-   * @param falconStats Falcon统计数据
-   * @return 是否保存成功
-   */
-  boolean save(FalconStats falconStats);
+    /**
+     * 保存Falcon统计数据
+     *
+     * @param falconStats Falcon统计数据
+     * @return 是否保存成功
+     */
+    boolean save(FalconStats falconStats);
 
-  /**
-   * 根据ID查询Falcon统计数据
-   *
-   * @param falconId 数据ID
-   * @return Falcon统计数据
-   */
-  FalconStats getById(Long falconId);
+    /**
+     * 根据ID查询Falcon统计数据
+     *
+     * @param falconId 数据ID
+     * @return Falcon统计数据
+     */
+    FalconStats getById(Long falconId);
 
-  /**
-   * 查询所有Falcon统计数据
-   *
-   * @return Falcon统计数据列表
-   */
-  List<FalconStats> list();
+    /**
+     * 查询所有Falcon统计数据
+     *
+     * @return Falcon统计数据列表
+     */
+    List<FalconStats> list();
 }
