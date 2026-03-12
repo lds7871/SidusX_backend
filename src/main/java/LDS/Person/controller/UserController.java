@@ -252,4 +252,36 @@ public class UserController {
                     .build());
         }
     }
+
+    // ==================== 更新游戏成就 ====================
+
+    /**
+     * 更新游戏成就
+     */
+    @PostMapping("/upachive")
+    @Operation(summary = "更新游戏成就", description = "将游戏分数加入成就JSON，如果游戏已存在则覆盖分数")
+    public ResponseEntity<UserResultResponse> updateGameAchievement(@RequestBody UpdateGameAchievementRequest request) {
+        try {
+            userService.updateGameAchievement(request);
+            return ResponseEntity.ok(UserResultResponse.builder()
+                    .code(200)
+                    .message("✅ 成就更新成功")
+                    .timestamp(System.currentTimeMillis())
+                    .build());
+        } catch (IllegalArgumentException e) {
+            log.warn("更新成就失败: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(UserResultResponse.builder()
+                    .code(400)
+                    .message(e.getMessage())
+                    .timestamp(System.currentTimeMillis())
+                    .build());
+        } catch (Exception e) {
+            log.error("更新成就异常", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(UserResultResponse.builder()
+                    .code(500)
+                    .message("更新失败: " + e.getMessage())
+                    .timestamp(System.currentTimeMillis())
+                    .build());
+        }
+    }
 }

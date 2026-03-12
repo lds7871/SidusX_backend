@@ -65,4 +65,12 @@ public interface UserService {
      * @param coverBase64 头像的Base64编码字符串
      */
     void updateCover(Long userId, String coverBase64);
+
+    /**
+     * 更新游戏成就
+     * 将gamename:gamescore加入achievement_json，如果gamename已存在则覆盖分数
+     *
+     * @param request 包含userid、gamename、gamescore的请求
+     */
+    void updateGameAchievement(UpdateGameAchievementRequest request);
 }

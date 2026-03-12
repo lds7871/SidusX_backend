@@ -336,4 +336,54 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("更新头像失败: " + e.getMessage(), e);
         }
     }
+
+    @Override
+    public void updateGameAchievement(UpdateGameAchievementRequest request) {
+        Long userId = request.getUserid();
+        String gameName = request.getGamename();
+        Integer gameScore = request.getGamescore();
+
+        if (userId == null || userId <= 0) {
+            throw new IllegalArgumentException("用户ID不能为空或无效");
+        }
+        if (gameName == null || gameName.isBlank()) {
+            throw new IllegalArgumentException("游戏名称不能为空");
+        }
+        if (gameScore == null) {
+            throw new IllegalArgumentException("游戏分数不能为空");
+        }
+
+        try {
+            // 验证用户是否存在
+            User user = userMapper.selectById(userId);
+            if (user == null) {
+                throw new IllegalArgumentException("用户不存在");
+            }
+
+            // 获取当前的achievement_json
+            String currentAchievementJson = user.getAchievementJson();
+            if (currentAchievementJson == null || currentAchievementJson.isBlank()
+                    || currentAchievementJson.equals("{}")) {
+                currentAchievementJson = "{}";
+            }
+
+            // 使用fastjson2解析和更新JSON
+            var achievementMap = JSON.parseObject(currentAchievementJson);
+            achievementMap.put(gameName, gameScore);
+            String updatedAchievementJson = JSON.toJSONString(achievementMap);
+
+            // 更新数据库
+            int result = userMapper.updateAchievementJson(userId, updatedAchievementJson);
+            if (result <= 0) {
+                throw new RuntimeException("更新成就失败");
+            }
+
+            logger.info("用户成就更新成功 - userId: {}, gameName: {}, gameScore: {}", userId, gameName, gameScore);
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("更新用户成就出错 - userId: {}, gameName: {}", userId, gameName, e);
+            throw new RuntimeException("更新成就失败: " + e.getMessage(), e);
+        }
+    }
 }
