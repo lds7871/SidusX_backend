@@ -2,6 +2,7 @@ package LDS.Person.service;
 
 import LDS.Person.dto.request.*;
 import LDS.Person.dto.response.UserInfoResponse;
+import LDS.Person.dto.response.GameAchievementResponse;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -73,4 +74,12 @@ public interface UserService {
      * @param request 包含userid、gamename、gamescore的请求
      */
     void updateGameAchievement(UpdateGameAchievementRequest request);
+
+    /**
+     * 获取用户游戏成就
+     *
+     * @param userId 用户ID
+     * @return 用户成就数据
+     */
+    GameAchievementResponse getGameAchievement(Long userId);
 }

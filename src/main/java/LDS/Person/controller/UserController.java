@@ -4,6 +4,7 @@ import LDS.Person.config.BypassIpWhitelist;
 import LDS.Person.dto.request.*;
 import LDS.Person.dto.response.UserInfoResponse;
 import LDS.Person.dto.response.UserResultResponse;
+import LDS.Person.dto.response.GameAchievementResponse;
 import LDS.Person.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -280,6 +281,38 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(UserResultResponse.builder()
                     .code(500)
                     .message("更新失败: " + e.getMessage())
+                    .timestamp(System.currentTimeMillis())
+                    .build());
+        }
+    }
+
+    /**
+     * 获取游戏成就
+     */
+    @GetMapping("/getachive/{userid}")
+    @BypassIpWhitelist(reason = "公开接口 - 获取用户成就")
+    @Operation(summary = "获取游戏成就", description = "通过用户ID获取用户的成就JSON数据")
+    public ResponseEntity<?> getGameAchievement(@PathVariable Long userid) {
+        try {
+            GameAchievementResponse response = userService.getGameAchievement(userid);
+            return ResponseEntity.ok(UserResultResponse.builder()
+                    .code(200)
+                    .message("✅ 成就获取成功")
+                    .data(response)
+                    .timestamp(System.currentTimeMillis())
+                    .build());
+        } catch (IllegalArgumentException e) {
+            log.warn("获取成就失败: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(UserResultResponse.builder()
+                    .code(400)
+                    .message(e.getMessage())
+                    .timestamp(System.currentTimeMillis())
+                    .build());
+        } catch (Exception e) {
+            log.error("获取成就异常", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(UserResultResponse.builder()
+                    .code(500)
+                    .message("获取失败: " + e.getMessage())
                     .timestamp(System.currentTimeMillis())
                     .build());
         }

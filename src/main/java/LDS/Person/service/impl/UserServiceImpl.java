@@ -2,6 +2,7 @@ package LDS.Person.service.impl;
 
 import LDS.Person.dto.request.*;
 import LDS.Person.dto.response.UserInfoResponse;
+import LDS.Person.dto.response.GameAchievementResponse;
 import LDS.Person.entity.User;
 import LDS.Person.repository.UserMapper;
 import LDS.Person.service.EmailService;
@@ -384,6 +385,41 @@ public class UserServiceImpl implements UserService {
         } catch (Exception e) {
             logger.error("更新用户成就出错 - userId: {}, gameName: {}", userId, gameName, e);
             throw new RuntimeException("更新成就失败: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public GameAchievementResponse getGameAchievement(Long userId) {
+        if (userId == null || userId <= 0) {
+            throw new IllegalArgumentException("用户ID不能为空或无效");
+        }
+
+        try {
+            // 验证用户是否存在
+            User user = userMapper.selectById(userId);
+            if (user == null) {
+                throw new IllegalArgumentException("用户不存在");
+            }
+
+            // 获取achievement_json
+            String achievementJson = user.getAchievementJson();
+            if (achievementJson == null || achievementJson.isBlank() || achievementJson.equals("{}")) {
+                achievementJson = "{}";
+            }
+
+            // 解析JSON为对象
+            Object achievements = JSON.parse(achievementJson);
+
+            logger.info("用户成就获取成功 - userId: {}", userId);
+            return GameAchievementResponse.builder()
+                    .userId(userId)
+                    .achievements(achievements)
+                    .build();
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("获取用户成就出错 - userId: {}", userId, e);
+            throw new RuntimeException("获取成就失败: " + e.getMessage(), e);
         }
     }
 }
