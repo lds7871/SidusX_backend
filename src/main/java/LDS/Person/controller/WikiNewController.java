@@ -172,7 +172,7 @@ public class WikiNewController {
      * {
      * "wikinew_id": 1,
      * "wiki_states": 1,
-     * "message": "Wiki 新增已批准并添加到主表",
+     * "message": "Wiki 新增已批准并添加到主表，已发送邮件通知",
      * "generated_wiki_id": 123
      * }
      * 
@@ -180,11 +180,16 @@ public class WikiNewController {
      * @return 审核响应
      */
     @PostMapping("/review")
+    @BypassIpWhitelist(reason = "审核 Wiki 新增申请")
     @Operation(summary = "审核 Wiki 新增申请（批准或驳回）")
     public ResponseEntity<?> reviewWikiNew(@RequestBody WikiNewReviewRequest request) {
         try {
             log.info("审核 Wiki 新增 - ID: {}, 审核状态: {}", request.getWikinewId(), request.getWikiStates());
             WikiNewReviewResponse response = wikiNewService.reviewWikiNew(request);
+            String msg = request.getWikiStates() == 1
+                    ? "Wiki 新增已批准并添加到主表，已发送邮件通知"
+                    : "Wiki 新增已驳回，已发送邮件通知";
+            response.setMessage(msg);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException ex) {
             log.warn("Wiki 新增审核参数验证失败: {}", ex.getMessage());

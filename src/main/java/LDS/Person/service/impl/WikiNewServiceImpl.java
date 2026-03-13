@@ -1,7 +1,10 @@
 package LDS.Person.service.impl;
 
+import LDS.Person.entity.User;
 import LDS.Person.entity.WikiNew;
+import LDS.Person.repository.UserMapper;
 import LDS.Person.repository.WikiNewMapper;
+import LDS.Person.service.EmailService;
 import LDS.Person.service.WikiNewService;
 import LDS.Person.dto.request.WikiNewCreateRequest;
 import LDS.Person.dto.request.WikiNewPageQueryRequest;
@@ -37,10 +40,15 @@ public class WikiNewServiceImpl implements WikiNewService {
 
     private final WikiNewMapper wikiNewMapper;
     private final JdbcTemplate jdbcTemplate;
+    private final UserMapper userMapper;
+    private final EmailService emailService;
 
-    public WikiNewServiceImpl(WikiNewMapper wikiNewMapper, JdbcTemplate jdbcTemplate) {
+    public WikiNewServiceImpl(WikiNewMapper wikiNewMapper, JdbcTemplate jdbcTemplate,
+            UserMapper userMapper, EmailService emailService) {
         this.wikiNewMapper = wikiNewMapper;
         this.jdbcTemplate = jdbcTemplate;
+        this.userMapper = userMapper;
+        this.emailService = emailService;
     }
 
     /**
@@ -247,6 +255,14 @@ public class WikiNewServiceImpl implements WikiNewService {
 
         log.info("Wiki 新增审核状态已更新 - ID: {}, 新状态: {}", request.getWikinewId(), request.getWikiStates());
 
+        // 4. 发送邮件通知 - 根据 create_user 查询邮箱并发送审核状态
+        try {
+            sendReviewStatusEmail(wikiNewData, request.getWikiStates());
+        } catch (Exception e) {
+            log.error("发送审核状态邮件失败 - WikiNewID: {}, 错误: {}", request.getWikinewId(), e.getMessage(), e);
+            // 邮件发送失败不阻止审核流程继续
+        }
+
         // 如果批准（状态为 1），则复制到 wiki 表
         if (request.getWikiStates() == 1) {
             return approveWikiNew(wikiNewData);
@@ -445,6 +461,79 @@ public class WikiNewServiceImpl implements WikiNewService {
         response.setUpdateUser(wikiNew.getUpdateUser());
         response.setWikiStates(wikiNew.getWikiStates());
         return response;
+    }
+
+    /**
+     * 发送审核状态邮件通知
+     */
+    private void sendReviewStatusEmail(WikiNewData wikiNewData, Integer status) {
+        if (wikiNewData.getCreateUser() == null || wikiNewData.getCreateUser().trim().isEmpty()) {
+            log.warn("Wiki 新增记录未指定 createUser，无法发送通知邮件 - WikiNewID: {}", wikiNewData.getWikinewId());
+            return;
+        }
+
+        // 1. 将 create_user 转为 int (user_id)
+        int userId;
+        try {
+            userId = Integer.parseInt(wikiNewData.getCreateUser().trim());
+        } catch (NumberFormatException e) {
+            log.warn("createUser 无法转换为整数 - createUser: {}, 错误: {}", wikiNewData.getCreateUser(), e.getMessage());
+            return;
+        }
+
+        // 2. 根据 userId 查询 users 表获取 mail
+        User user = userMapper.selectById((long) userId);
+        if (user == null) {
+            log.warn("用户不存在 - UserID: {}", userId);
+            return;
+        }
+
+        String mail = user.getMail();
+        if (mail == null || mail.trim().isEmpty()) {
+            log.warn("用户邮箱为空 - UserID: {}, UserName: {}", userId, user.getName());
+            return;
+        }
+
+        // 3. 根据审核状态生成邮件内容并发送
+        String statusText = status == 1 ? "已批准" : "已驳回";
+        String subject = "Wiki 新增审核状态通知 - " + statusText;
+        String content = buildEmailContent(wikiNewData, status, statusText, user.getName());
+
+        log.info("发送审核状态邮件 - 收件人: {}, 用户名: {}, WikiNewID: {}, 状态: {}",
+                mail, user.getName(), wikiNewData.getWikinewId(), statusText);
+
+        emailService.sendHtmlMail(mail, subject, content);
+    }
+
+    /**
+     * 构建审核状态邮件内容
+     */
+    private String buildEmailContent(WikiNewData wikiNewData, Integer status, String statusText, String userName) {
+        return String.format(
+                "<html>" +
+                        "<head><meta charset='UTF-8'></head>" +
+                        "<body>" +
+                        "<h2>Wiki 新增审核通知</h2>" +
+                        "<p>尊敬的 %s，</p>" +
+                        "<p>您提交的 Wiki 新增审核已处理，审核结果如下：</p>" +
+                        "<table border='1' cellpadding='10' cellspacing='0'>" +
+                        "<tr><td><strong>申请ID</strong></td><td>%d</td></tr>" +
+                        "<tr><td><strong>Wiki 键名</strong></td><td>%s</td></tr>" +
+                        "<tr><td><strong>审核状态</strong></td><td><span style='color: %s; font-weight: bold;'>%s</span></td></tr>"
+                        +
+                        "<tr><td><strong>处理时间</strong></td><td>%s</td></tr>" +
+                        "</table>" +
+                        "<p style='color: #666; font-size: 12px; margin-top: 20px;'>" +
+                        "这是系统自动发送的邮件，请勿直接回复。如有问题，请联系管理员。" +
+                        "</p>" +
+                        "</body>" +
+                        "</html>",
+                userName,
+                wikiNewData.getWikinewId(),
+                wikiNewData.getKeyName(),
+                status == 1 ? "green" : "red",
+                statusText,
+                LocalDateTime.now().toString());
     }
 
     /**
