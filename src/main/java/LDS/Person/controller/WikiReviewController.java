@@ -58,13 +58,14 @@ public class WikiReviewController {
      * 状态 2: 拒绝
      */
     @PostMapping("/update-status")
+    @BypassIpWhitelist(reason = "更新 Wiki 修改审核状态")
     @Operation(summary = "更新 Wiki 修改审核状态")
     public ResponseEntity<JsonResponse> updateStatus(@RequestBody WikiReviewUpdateRequest request) {
         try {
             log.info("更新审核状态 - ReviewID: {}, Status: {}", request.getWikireviewId(), request.getWikiStates());
             boolean success = wikiReviewService.updateReviewStatus(request);
             if (success) {
-                String msg = request.getWikiStates() == 1 ? "审核通过，Wiki 数据已同步" : "审核已拒绝";
+                String msg = request.getWikiStates() == 1 ? "审核通过，Wiki 数据已同步，已发送邮件通知" : "审核已拒绝，已发送邮件通知";
                 return ResponseEntity.ok(JsonResponse.success(msg));
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(JsonResponse.failure("审核记录不存在或更新失败"));

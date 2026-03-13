@@ -6,11 +6,14 @@ import LDS.Person.dto.request.WikiReviewUpdateRequest;
 import LDS.Person.dto.response.PageResponse;
 import LDS.Person.dto.response.WikiReviewListResponse;
 import LDS.Person.dto.response.WikiReviewResponse;
+import LDS.Person.entity.User;
 import LDS.Person.entity.Wiki;
 import LDS.Person.entity.WikiHistory;
 import LDS.Person.entity.WikiReview;
+import LDS.Person.repository.UserMapper;
 import LDS.Person.repository.WikiHistoryMapper;
 import LDS.Person.repository.WikiReviewMapper;
+import LDS.Person.service.EmailService;
 import LDS.Person.service.WikiReviewService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,12 +38,16 @@ public class WikiReviewServiceImpl implements WikiReviewService {
     private final WikiReviewMapper wikiReviewMapper;
     private final WikiHistoryMapper wikiHistoryMapper;
     private final JdbcTemplate jdbcTemplate;
+    private final UserMapper userMapper;
+    private final EmailService emailService;
 
     public WikiReviewServiceImpl(WikiReviewMapper wikiReviewMapper, WikiHistoryMapper wikiHistoryMapper,
-            JdbcTemplate jdbcTemplate) {
+            JdbcTemplate jdbcTemplate, UserMapper userMapper, EmailService emailService) {
         this.wikiReviewMapper = wikiReviewMapper;
         this.wikiHistoryMapper = wikiHistoryMapper;
         this.jdbcTemplate = jdbcTemplate;
+        this.userMapper = userMapper;
+        this.emailService = emailService;
     }
 
     @Override
@@ -194,7 +201,91 @@ public class WikiReviewServiceImpl implements WikiReviewService {
             overwriteWikiData(review, now, updateUser);
         }
 
+        // 4. 发送邮件通知 - 根据 update_user 查询邮箱并发送审核状态
+        try {
+            sendReviewStatusEmail(review, request.getWikiStates());
+        } catch (Exception e) {
+            log.error("发送审核状态邮件失败 - WikiReviewID: {}, 错误: {}", request.getWikireviewId(), e.getMessage(), e);
+            // 邮件发送失败不阻止审核流程继续
+        }
+
         return true;
+    }
+
+    /**
+     * 发送审核状态邮件通知
+     */
+    private void sendReviewStatusEmail(WikiReview review, Integer status) {
+        if (review.getUpdateUser() == null || review.getUpdateUser().trim().isEmpty()) {
+            log.warn("审核记录未指定 updateUser，无法发送通知邮件 - WikiReviewID: {}", review.getWikireviewId());
+            return;
+        }
+
+        // 1. 将 update_user 转为 int (user_id)
+        int userId;
+        try {
+            userId = Integer.parseInt(review.getUpdateUser().trim());
+        } catch (NumberFormatException e) {
+            log.warn("updateUser 无法转换为整数 - updateUser: {}, 错误: {}", review.getUpdateUser(), e.getMessage());
+            return;
+        }
+
+        // 2. 根据 userId 查询 users 表获取 mail
+        User user = userMapper.selectById((long) userId);
+        if (user == null) {
+            log.warn("用户不存在 - UserID: {}", userId);
+            return;
+        }
+
+        String mail = user.getMail();
+        if (mail == null || mail.trim().isEmpty()) {
+            log.warn("用户邮箱为空 - UserID: {}, UserName: {}", userId, user.getName());
+            return;
+        }
+
+        // 3. 根据审核状态生成邮件内容并发送
+        String subject;
+        String content;
+        String statusText = status == 1 ? "已通过" : "已拒绝";
+
+        subject = "Wiki 修改审核状态通知 - " + statusText;
+        content = buildEmailContent(review, status, statusText, user.getName());
+
+        log.info("发送审核状态邮件 - 收件人: {}, 用户名: {}, 审核ID: {}, 状态: {}",
+                mail, user.getName(), review.getWikireviewId(), statusText);
+
+        emailService.sendHtmlMail(mail, subject, content);
+    }
+
+    /**
+     * 构建审核状态邮件内容
+     */
+    private String buildEmailContent(WikiReview review, Integer status, String statusText, String userName) {
+        return String.format(
+                "<html>" +
+                        "<head><meta charset='UTF-8'></head>" +
+                        "<body>" +
+                        "<h2>Wiki 修改审核通知</h2>" +
+                        "<p>尊敬的 %s，</p>" +
+                        "<p>您提交的 Wiki 修改审核已处理，审核结果如下：</p>" +
+                        "<table border='1' cellpadding='10' cellspacing='0'>" +
+                        "<tr><td><strong>审核ID</strong></td><td>%d</td></tr>" +
+                        "<tr><td><strong>关联的Wiki</strong></td><td>Wiki ID: %d</td></tr>" +
+                        "<tr><td><strong>审核状态</strong></td><td><span style='color: %s; font-weight: bold;'>%s</span></td></tr>"
+                        +
+                        "<tr><td><strong>处理时间</strong></td><td>%s</td></tr>" +
+                        "</table>" +
+                        "<p style='color: #666; font-size: 12px; margin-top: 20px;'>" +
+                        "这是系统自动发送的邮件，请勿直接回复。如有问题，请联系管理员。" +
+                        "</p>" +
+                        "</body>" +
+                        "</html>",
+                userName,
+                review.getWikireviewId(),
+                review.getWikiId(),
+                status == 1 ? "green" : "red",
+                statusText,
+                LocalDateTime.now().toString());
     }
 
     /**
