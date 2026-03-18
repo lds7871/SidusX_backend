@@ -339,6 +339,37 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void updatePlace(Long userId, String place) {
+        if (userId == null || userId <= 0) {
+            throw new IllegalArgumentException("用户ID不能为空或无效");
+        }
+        if (place == null || place.isBlank()) {
+            throw new IllegalArgumentException("地区不能为空");
+        }
+
+        try {
+            // 验证用户是否存在
+            User user = userMapper.selectById(userId);
+            if (user == null) {
+                throw new IllegalArgumentException("用户不存在");
+            }
+
+            // 更新地区
+            int result = userMapper.updatePlace(userId, place.trim());
+            if (result <= 0) {
+                throw new RuntimeException("更新地区失败");
+            }
+
+            logger.info("用户地区更新成功 - userId: {}, place: {}", userId, place);
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("更新用户地区出错 - userId: {}", userId, e);
+            throw new RuntimeException("更新地区失败: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
     public void updateGameAchievement(UpdateGameAchievementRequest request) {
         Long userId = request.getUserid();
         String gameName = request.getGamename();

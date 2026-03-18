@@ -57,6 +57,9 @@ public interface UserMapper {
         @Update("UPDATE users SET cover = decode(#{cover}, 'base64') WHERE user_id = #{userId}")
         int updateCover(@Param("userId") Long userId, @Param("cover") String cover);
 
+        @Update("UPDATE users SET place = #{place} WHERE user_id = #{userId}")
+        int updatePlace(@Param("userId") Long userId, @Param("place") String place);
+
         @Update("UPDATE users SET achievement_json = #{achievementJson}::jsonb WHERE user_id = #{userId}")
         int updateAchievementJson(@Param("userId") Long userId, @Param("achievementJson") String achievementJson);
 }

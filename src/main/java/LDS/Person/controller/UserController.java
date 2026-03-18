@@ -254,6 +254,36 @@ public class UserController {
         }
     }
 
+    /**
+     * 更新用户所在地区
+     */
+    @PostMapping("/place/update")
+    @Operation(summary = "更新用户地区", description = "更新用户所在地区，将传入的地区覆盖原数据库数据")
+    public ResponseEntity<UserResultResponse> updatePlace(@RequestBody UpdatePlaceRequest request) {
+        try {
+            userService.updatePlace(request.getUserId(), request.getPlace());
+            return ResponseEntity.ok(UserResultResponse.builder()
+                    .code(200)
+                    .message("✅ 地区更新成功")
+                    .timestamp(System.currentTimeMillis())
+                    .build());
+        } catch (IllegalArgumentException e) {
+            log.warn("更新地区失败: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(UserResultResponse.builder()
+                    .code(400)
+                    .message(e.getMessage())
+                    .timestamp(System.currentTimeMillis())
+                    .build());
+        } catch (Exception e) {
+            log.error("更新地区异常", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(UserResultResponse.builder()
+                    .code(500)
+                    .message("更新失败: " + e.getMessage())
+                    .timestamp(System.currentTimeMillis())
+                    .build());
+        }
+    }
+
     // ==================== 更新游戏成就 ====================
 
     /**

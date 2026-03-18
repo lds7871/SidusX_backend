@@ -68,6 +68,14 @@ public interface UserService {
     void updateCover(Long userId, String coverBase64);
 
     /**
+     * 更新用户所在地区
+     *
+     * @param userId 用户ID
+     * @param place  地区信息
+     */
+    void updatePlace(Long userId, String place);
+
+    /**
      * 更新游戏成就
      * 将gamename:gamescore加入achievement_json，如果gamename已存在则覆盖分数
      *
