@@ -407,6 +407,17 @@ COMMENT ON COLUMN announcement.content IS '公告内容';
 COMMENT ON COLUMN announcement.create_time IS '公告创建时间';
 
 -- #########################################################
+-- 创建表 ms_ship                                        已创建
+CREATE TABLE ms_ship (
+    ms_id SERIAL PRIMARY KEY, -- 自增主键，唯一标识每条记录
+    content JSONB NOT NULL -- 存储完整百科 JSON 内容（数组/对象均可）
+);
+
+COMMENT ON TABLE ms_ship IS 'MS_SHIP表';
+
+COMMENT ON COLUMN ms_ship.ms_id IS 'MS_SHIP记录ID，自增主键';
+
+COMMENT ON COLUMN ms_ship.content IS '存储完整百科 JSON 内容';
 
 -- #########################################################
 
