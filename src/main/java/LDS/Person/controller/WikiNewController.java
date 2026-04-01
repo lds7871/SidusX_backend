@@ -56,7 +56,7 @@ public class WikiNewController {
      * @return 创建成功的 Wiki 响应
      */
     @PostMapping("/create")
-    // @BypassIpWhitelist(reason = "Wiki 新增创建接口")
+    @BypassIpWhitelist(reason = "Wiki 新增创建接口")
     @Operation(summary = "创建新的 Wiki 审核申请")
     public ResponseEntity<?> createWikiNew(@RequestBody WikiNewCreateRequest request) {
         try {
