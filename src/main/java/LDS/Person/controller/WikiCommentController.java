@@ -92,7 +92,7 @@ public class WikiCommentController {
      * @return 留言列表
      */
     @PostMapping("/list")
-    @BypassIpWhitelist(reason = "Wiki 留言查询接口")
+    // @BypassIpWhitelist(reason = "Wiki 留言查询接口")
     @Operation(summary = "根据 wiki_id 查询 Wiki 留言列表")
     public ResponseEntity<?> listByWikiId(@RequestBody WikiCommentByWikiIdRequest request) {
         try {

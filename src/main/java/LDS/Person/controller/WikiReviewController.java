@@ -36,7 +36,7 @@ public class WikiReviewController {
      * 提交 Wiki 审核申请
      */
     @PostMapping("/create")
-    @BypassIpWhitelist(reason = "提交 Wiki 修改审核")
+    // @BypassIpWhitelist(reason = "提交 Wiki 修改审核")
     @Operation(summary = "提交 Wiki 修改审核申请")
     public ResponseEntity<?> createReview(@RequestBody WikiReviewCreateRequest request) {
         try {
@@ -58,7 +58,7 @@ public class WikiReviewController {
      * 状态 2: 拒绝
      */
     @PostMapping("/update-status")
-    @BypassIpWhitelist(reason = "更新 Wiki 修改审核状态")
+    // @BypassIpWhitelist(reason = "更新 Wiki 修改审核状态")
     @Operation(summary = "更新 Wiki 修改审核状态")
     public ResponseEntity<JsonResponse> updateStatus(@RequestBody WikiReviewUpdateRequest request) {
         try {

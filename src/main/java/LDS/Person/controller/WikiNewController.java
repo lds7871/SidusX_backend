@@ -56,7 +56,7 @@ public class WikiNewController {
      * @return 创建成功的 Wiki 响应
      */
     @PostMapping("/create")
-    @BypassIpWhitelist(reason = "Wiki 新增创建接口")
+    // @BypassIpWhitelist(reason = "Wiki 新增创建接口")
     @Operation(summary = "创建新的 Wiki 审核申请")
     public ResponseEntity<?> createWikiNew(@RequestBody WikiNewCreateRequest request) {
         try {
@@ -97,7 +97,7 @@ public class WikiNewController {
      * @return 分页响应
      */
     @PostMapping("/page")
-    @Operation(summary = "分页查询 Wiki 新增列表")
+    @Operation(summary = "分页查询 Wiki 新增列表")//管理员
     public ResponseEntity<PageResponse<WikiNewListResponse>> pageQuery(@RequestBody WikiNewPageQueryRequest request) {
         try {
             log.info("分页查询 Wiki 新增 - Page: {}, PageSize: {}", request.getPage(), request.getPageSize());
@@ -134,7 +134,7 @@ public class WikiNewController {
      * @return Wiki 完整内容，如果不存在则返回 404
      */
     @GetMapping("/{wikinewId}")
-    @Operation(summary = "根据 ID 查询 Wiki 新增完整内容")
+    @Operation(summary = "根据 ID 查询 Wiki 新增完整内容")//管理员
     public ResponseEntity<?> getWikiNewById(@PathVariable Long wikinewId) {
         try {
             log.info("查询 Wiki 新增详情 - ID: {}", wikinewId);
@@ -180,8 +180,8 @@ public class WikiNewController {
      * @return 审核响应
      */
     @PostMapping("/review")
-    @BypassIpWhitelist(reason = "审核 Wiki 新增申请")
-    @Operation(summary = "审核 Wiki 新增申请（批准或驳回）")
+    // @BypassIpWhitelist(reason = "审核 Wiki 新增申请")
+    @Operation(summary = "审核 Wiki 新增申请（批准或驳回）")//管理员
     public ResponseEntity<?> reviewWikiNew(@RequestBody WikiNewReviewRequest request) {
         try {
             log.info("审核 Wiki 新增 - ID: {}, 审核状态: {}", request.getWikinewId(), request.getWikiStates());
