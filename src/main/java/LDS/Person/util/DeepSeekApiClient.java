@@ -229,6 +229,7 @@ public class DeepSeekApiClient {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     static class Message {
         private String role; // system, user, assistant
         private String content;
