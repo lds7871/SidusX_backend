@@ -26,40 +26,42 @@ import java.util.List;
  * 使用示例:
  * DeepSeekApiClient client = new DeepSeekApiClient();
  * 
- *  String response = client.chatWithDefault("问题","提示词");
+ * String response = client.chatWithDefault("问题","提示词");
  * 
  * String response2 = client.chatWithCustomParams("问题","提示词",0.7,1000);
  */
 public class DeepSeekApiClient {
 
     private static final Logger logger = LoggerFactory.getLogger(DeepSeekApiClient.class);
-    
+
     private static final String API_URL = "https://api.deepseek.com/chat/completions";
-    private static final String MODEL = "deepseek-chat";
+    private static final String MODEL = "deepseek-v4-flash";
     private static final int DEFAULT_MAX_TOKENS = 4096;
     private static final double DEFAULT_TEMPERATURE = 1.0;
     private static final double DEFAULT_TOP_P = 1.0;
-    
+
     private final String apiKey;
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
-    
+
     /**
      * 构造函数 - 从环境变量读取API Key
+     * 
      * @throws IllegalArgumentException 如果环境变量DEEPSEEK_API_KEY未设置
      */
     public DeepSeekApiClient() {
         this.apiKey = getApiKeyFromEnv();
         this.httpClient = LDS.Person.config.HttpClientFactory.getInstance();
         this.objectMapper = new ObjectMapper();
-        
+
         if (apiKey == null || apiKey.isEmpty()) {
             throw new IllegalArgumentException("DEEPSEEK_API_KEY 环境变量未设置");
         }
     }
-    
+
     /**
      * 从环境变量读取API Key
+     * 
      * @return API Key 字符串
      */
     private String getApiKeyFromEnv() {
@@ -69,7 +71,7 @@ public class DeepSeekApiClient {
         }
         return apiKey;
     }
-    
+
     /**
      * 调用DeepSeek API进行聊天补全
      * 
@@ -82,49 +84,49 @@ public class DeepSeekApiClient {
         if (userQuestion == null || userQuestion.isEmpty()) {
             throw new IllegalArgumentException("用户问题不能为空");
         }
-        
+
         // if (systemPrompt == null || systemPrompt.isEmpty()) {
-        //     throw new IllegalArgumentException("系统提示词不能为空");
+        // throw new IllegalArgumentException("系统提示词不能为空");
         // }
-        
+
         // 构建请求体
         ChatRequest request = buildChatRequest(userQuestion, systemPrompt);
-        
+
         // 转换为JSON
         String requestBody = objectMapper.writeValueAsString(request);
         logger.debug("调用DeepSeekAPI-->chatWithDefault");
-        
+
         // 发送HTTP请求
         HttpRequest httpRequest = buildHttpRequest(requestBody);
         HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-        
+
         // 解析响应
         return parseResponse(response.body());
     }
-    
+
     /**
      * 高级版本 - 支持自定义参数
      * 
      * @param userQuestion 用户提问内容
      * @param systemPrompt 系统提示词
-     * @param temperature 采样温度 (0-2)，默认1.0
-     * @param maxTokens 最大生成tokens，默认4096
+     * @param temperature  采样温度 (0-2)，默认1.0
+     * @param maxTokens    最大生成tokens，默认4096
      * @return API返回的回复内容
      * @throws Exception 如果API调用失败
      */
-    public String chatWithCustomParams(String userQuestion, String systemPrompt, 
-                                       Double temperature, Integer maxTokens) throws Exception {
+    public String chatWithCustomParams(String userQuestion, String systemPrompt,
+            Double temperature, Integer maxTokens) throws Exception {
         if (userQuestion == null || userQuestion.isEmpty()) {
             throw new IllegalArgumentException("用户问题不能为空");
         }
-        
+
         // if (systemPrompt == null || systemPrompt.isEmpty()) {
-        //     throw new IllegalArgumentException("系统提示词不能为空");
+        // throw new IllegalArgumentException("系统提示词不能为空");
         // }
-        
+
         // 构建请求体
         ChatRequest request = buildChatRequest(userQuestion, systemPrompt);
-        
+
         // 设置自定义参数
         if (temperature != null) {
             request.setTemperature(temperature);
@@ -132,19 +134,19 @@ public class DeepSeekApiClient {
         if (maxTokens != null) {
             request.setMax_tokens(maxTokens);
         }
-        
+
         // 转换为JSON
         String requestBody = objectMapper.writeValueAsString(request);
         logger.debug("调用DeepSeekAPI-->chatWithCustomParams");
-        
+
         // 发送HTTP请求
         HttpRequest httpRequest = buildHttpRequest(requestBody);
         HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-        
+
         // 解析响应
         return parseResponse(response.body());
     }
-    
+
     /**
      * 构建聊天请求对象
      */
@@ -155,21 +157,21 @@ public class DeepSeekApiClient {
         request.setMax_tokens(DEFAULT_MAX_TOKENS);
         request.setTop_p(DEFAULT_TOP_P);
         request.setStream(false);
-        
+
         // 构建消息列表
         List<Message> messages = new ArrayList<>();
-        
+
         // 添加系统提示词
         messages.add(new Message("system", systemPrompt));
-        
+
         // 添加用户问题
         messages.add(new Message("user", userQuestion));
-        
+
         request.setMessages(messages);
-        
+
         return request;
     }
-    
+
     /**
      * 构建HTTP请求
      */
@@ -182,27 +184,27 @@ public class DeepSeekApiClient {
                 .timeout(Duration.ofSeconds(30))
                 .build();
     }
-    
+
     /**
      * 解析API响应
      */
     private String parseResponse(String responseBody) throws Exception {
         logger.debug("接收到DeepSeekAPI响应");
-        
+
         ChatResponse response = objectMapper.readValue(responseBody, ChatResponse.class);
-        
+
         if (response.getChoices() != null && !response.getChoices().isEmpty()) {
             Choice choice = response.getChoices().get(0);
             if (choice.getMessage() != null && choice.getMessage().getContent() != null) {
                 return choice.getMessage().getContent();
             }
         }
-        
+
         throw new RuntimeException("API响应格式错误或无有效内容");
     }
-    
+
     // ==================== 内部数据类 ====================
-    
+
     /**
      * 聊天请求体
      */
@@ -220,7 +222,7 @@ public class DeepSeekApiClient {
         private Double top_p;
         private Boolean stream;
     }
-    
+
     /**
      * 消息对象
      */
@@ -228,10 +230,10 @@ public class DeepSeekApiClient {
     @NoArgsConstructor
     @AllArgsConstructor
     static class Message {
-        private String role;  // system, user, assistant
+        private String role; // system, user, assistant
         private String content;
     }
-    
+
     /**
      * API响应体
      */
@@ -245,7 +247,7 @@ public class DeepSeekApiClient {
         private String model;
         private Usage usage;
     }
-    
+
     /**
      * 选择对象 (choices)
      */
@@ -257,7 +259,7 @@ public class DeepSeekApiClient {
         private String finish_reason;
         private Integer index;
     }
-    
+
     /**
      * token使用情况
      */
@@ -272,9 +274,9 @@ public class DeepSeekApiClient {
         @JsonProperty("total_tokens")
         private Integer total_tokens;
     }
-    
+
     // ==================== Main测试方法 ====================
-    
+
     /**
      * 简单的测试main方法
      * 使用示例：
@@ -283,11 +285,11 @@ public class DeepSeekApiClient {
     public static void main(String[] args) throws Exception {
         // 初始化客户端（会从环境变量读取API Key）
         DeepSeekApiClient client = new DeepSeekApiClient();
-        
+
         // 示例1: 基本用法
         String question = "请解释什么是机器学习";
         String systemPrompt = "你是一个友好的AI助手，请用简洁的语言解释概念";
-        
+
         try {
             String response = client.chatWithDefault(question, systemPrompt);
             System.out.println("用户提问: " + question);

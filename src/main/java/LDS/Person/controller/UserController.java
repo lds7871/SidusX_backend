@@ -284,30 +284,30 @@ public class UserController {
         }
     }
 
-    // ==================== 更新游戏成就 ====================
+    // ==================== 更新游戏成绩 ====================
 
     /**
-     * 更新游戏成就
+     * 更新游戏成绩
      */
     @PostMapping("/upachive")
-    @Operation(summary = "更新游戏成就", description = "将游戏分数加入成就JSON，如果游戏已存在则覆盖分数")
+    @Operation(summary = "更新游戏成绩", description = "将游戏分数加入成绩JSON，如果游戏已存在则覆盖分数")
     public ResponseEntity<UserResultResponse> updateGameAchievement(@RequestBody UpdateGameAchievementRequest request) {
         try {
             userService.updateGameAchievement(request);
             return ResponseEntity.ok(UserResultResponse.builder()
                     .code(200)
-                    .message("✅ 成就更新成功")
+                    .message("✅ 成绩更新成功")
                     .timestamp(System.currentTimeMillis())
                     .build());
         } catch (IllegalArgumentException e) {
-            log.warn("更新成就失败: {}", e.getMessage());
+            log.warn("更新成绩失败: {}", e.getMessage());
             return ResponseEntity.badRequest().body(UserResultResponse.builder()
                     .code(400)
                     .message(e.getMessage())
                     .timestamp(System.currentTimeMillis())
                     .build());
         } catch (Exception e) {
-            log.error("更新成就异常", e);
+            log.error("更新成绩异常", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(UserResultResponse.builder()
                     .code(500)
                     .message("更新失败: " + e.getMessage())
@@ -317,29 +317,29 @@ public class UserController {
     }
 
     /**
-     * 获取游戏成就
+     * 获取游戏成绩
      */
     @GetMapping("/getachive/{userid}")
-    @BypassIpWhitelist(reason = "公开接口 - 获取用户成就")
-    @Operation(summary = "获取游戏成就", description = "通过用户ID获取用户的成就JSON数据")
+    @BypassIpWhitelist(reason = "公开接口 - 获取用户成绩")
+    @Operation(summary = "获取游戏成绩", description = "通过用户ID获取用户的成绩JSON数据")
     public ResponseEntity<?> getGameAchievement(@PathVariable Long userid) {
         try {
             GameAchievementResponse response = userService.getGameAchievement(userid);
             return ResponseEntity.ok(UserResultResponse.builder()
                     .code(200)
-                    .message("✅ 成就获取成功")
+                    .message("✅ 成绩获取成功")
                     .data(response)
                     .timestamp(System.currentTimeMillis())
                     .build());
         } catch (IllegalArgumentException e) {
-            log.warn("获取成就失败: {}", e.getMessage());
+            log.warn("获取成绩失败: {}", e.getMessage());
             return ResponseEntity.badRequest().body(UserResultResponse.builder()
                     .code(400)
                     .message(e.getMessage())
                     .timestamp(System.currentTimeMillis())
                     .build());
         } catch (Exception e) {
-            log.error("获取成就异常", e);
+            log.error("获取成绩异常", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(UserResultResponse.builder()
                     .code(500)
                     .message("获取失败: " + e.getMessage())
