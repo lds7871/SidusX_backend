@@ -2,6 +2,7 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+代理记录图片.png
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
