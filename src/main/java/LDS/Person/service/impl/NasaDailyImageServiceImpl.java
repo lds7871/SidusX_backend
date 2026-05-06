@@ -196,6 +196,18 @@ public class NasaDailyImageServiceImpl implements NasaDailyImageService {
         }
     }
 
+    @Override
+    public NasaDailyImageDetailResponse getLatest() {
+        String sql = "SELECT apod_id, copyright, explanation, media_type, title, url, create_time " +
+                "FROM nasa_daily_image ORDER BY create_time DESC LIMIT 1";
+        try {
+            return jdbcTemplate.queryForObject(sql, new NasaDailyImageDetailRowMapper());
+        } catch (Exception e) {
+            logger.debug("查询最新图片不存在");
+            return null;
+        }
+    }
+
     /**
      * 删除NASA图片记录
      */

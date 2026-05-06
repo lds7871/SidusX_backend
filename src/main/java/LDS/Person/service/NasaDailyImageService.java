@@ -59,6 +59,13 @@ public interface NasaDailyImageService {
     NasaDailyImageDetailResponse getDetail(Long apodId);
 
     /**
+     * 获取最新一条NASA图片详细信息
+     *
+     * @return 最新图片详细信息，若无记录则返回null
+     */
+    NasaDailyImageDetailResponse getLatest();
+
+    /**
      * 删除NASA图片记录
      * 
      * @param apodId 图片ID

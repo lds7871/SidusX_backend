@@ -85,6 +85,35 @@ public class NasaDailyImageController {
     }
 
     /**
+     * 获取最新一条NASA图片的全部内容
+     *
+     * 请求示例：
+     * GET /GHapi/nasa-daily-image/latest
+     *
+     * @return 最新图片详细信息
+     */
+    @GetMapping("/latest")
+    @BypassIpWhitelist(reason = "公开接口，允许任意 IP 查询最新发射数据")
+    @Operation(summary = "获取最新一条NASA图片的全部内容")
+    public ResponseEntity<?> getLatest() {
+        try {
+            log.info("查询最新NASA图片");
+            NasaDailyImageDetailResponse response = nasaDailyImageService.getLatest();
+
+            if (response == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(JsonResponse.failure("暂无图片数据"));
+            }
+
+            return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            log.error("查询最新NASA图片失败", ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(JsonResponse.failure("查询最新图片失败"));
+        }
+    }
+
+    /**
      * 获取NASA图片详细信息
      * 返回完整的图片信息，包括版权信息、说明文字、图片链接等
      * 
