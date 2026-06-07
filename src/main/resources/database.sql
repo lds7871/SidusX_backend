@@ -1,5 +1,5 @@
 -- #########################################################
--- 创建表 api_log                                         已创建
+-- 创建表 api_log
 CREATE TABLE api_log (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     ip VARCHAR(45) NOT NULL,
@@ -59,7 +59,7 @@ COMMENT ON COLUMN users.achievement_json IS '成就 JSON 数据';
 COMMENT ON COLUMN users.expired_time IS '登录过期时间';
 
 -- 111111111111111111111111111111111111111111111111111111111111111111111
--- 创建表 article                                         已创建
+-- 创建表 article
 CREATE TABLE article (
     article_id BIGSERIAL PRIMARY KEY, -- 自增主键
     title VARCHAR(200) NOT NULL, -- 标题
@@ -92,7 +92,7 @@ COMMENT ON COLUMN article.update_time IS '更新时间';
 COMMENT ON TABLE article IS '文章表';
 
 -- #########################################################
--- 创建表 wiki                                           已创建
+-- 创建表 wiki
 CREATE TABLE wiki (
     wiki_id BIGSERIAL PRIMARY KEY, -- 自增主键
     key_name VARCHAR(200) NOT NULL UNIQUE, -- 唯一键名（必须唯一）
@@ -128,7 +128,7 @@ COMMENT ON COLUMN wiki.update_user IS '更新用户id';
 COMMENT ON TABLE wiki IS 'Wiki内容表';
 
 -- #######################################################
--- 创建 wiki审核表                                        已创建
+-- 创建 wiki审核表
 CREATE TABLE wiki_review (
     wikireview_id BIGSERIAL PRIMARY KEY, -- 自增主键
     wiki_id BIGINT NOT NULL REFERENCES wiki (wiki_id) ON DELETE CASCADE, -- 关联wiki表
@@ -161,7 +161,7 @@ COMMENT ON COLUMN wiki_review.wiki_states IS '审核状态，0待审核，1通�
 COMMENT ON TABLE wiki_review IS 'Wiki审核修改内容表';
 
 -- #########################################################
--- 创建wiki新增表                                            已创建
+-- 创建wiki新增表
 CREATE TABLE wiki_new (
     wikinew_id BIGSERIAL PRIMARY KEY, -- 自增主键
     key_name VARCHAR(200) NOT NULL UNIQUE, -- 唯一键名（必须唯一）
@@ -200,7 +200,7 @@ COMMENT ON COLUMN wiki_new.wiki_states IS '审核状态，0待审核，1通过�
 COMMENT ON TABLE wiki_new IS 'Wiki审核新增内容表';
 
 -- #########################################################
--- 创建 wiki 历史表                                       已创建
+-- 创建 wiki 历史表
 CREATE TABLE wiki_history (
     history_id BIGSERIAL PRIMARY KEY, -- 历史记录ID，自增主键
     wiki_id BIGINT NOT NULL, -- 来源 wiki 主表ID（外键）
@@ -274,7 +274,7 @@ COMMENT ON COLUMN spacex_lunch.create_time IS '创建时间';
 COMMENT ON TABLE spacex_lunch IS '空叉航天任务表';
 
 -- #########################################################
--- 创建表 nasa_daily_image                                 已创建
+-- 创建表 nasa_daily_image
 CREATE TABLE nasa_daily_image (
     apod_id BIGSERIAL PRIMARY KEY, -- 自增主键
     copyright VARCHAR(200), -- 图片大标题
@@ -304,7 +304,7 @@ COMMENT ON COLUMN nasa_daily_image.create_time IS '记录创建时间';
 COMMENT ON TABLE nasa_daily_image IS 'APOD每日图片信息表';
 
 -- #########################################################
--- 创建表 api_raw_logs                                         已创建
+-- 创建表 api_raw_logs
 CREATE TABLE api_raw_logs (
     api_raw_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     raw_json JSONB NOT NULL,
@@ -322,7 +322,7 @@ COMMENT ON COLUMN api_raw_logs.created_at IS '记录创建时间';
 COMMENT ON TABLE "api_raw_logs" IS 'API原始日志存储表';
 
 -- #########################################################
--- 创建表 falcon_stats                            已创建
+-- 创建表 falcon_stats
 CREATE TABLE falcon_stats (
     falcon_id BIGSERIAL PRIMARY KEY, -- 自增主键                   
     document_id TEXT NOT NULL, -- SpaceX 文档 ID
@@ -346,7 +346,7 @@ COMMENT ON COLUMN falcon_stats.total_reflights IS '总复用次数';
 COMMENT ON COLUMN falcon_stats.created_at IS '数据写入数据库的本地时间';
 
 -- #########################################################
--- 创建表 recent_launch                                        已创建
+-- 创建表 recent_launch
 CREATE TABLE recent_launch (
     id SERIAL PRIMARY KEY, -- 自增主键
     data JSONB NOT NULL, -- 存储完整的发射数据 JSON
@@ -362,7 +362,7 @@ COMMENT ON COLUMN recent_launch.data IS 'JSONB格式存储的完整发射数据'
 COMMENT ON COLUMN recent_launch.get_time IS '时间';
 
 -- #########################################################
--- 创建表 wiki_comment                                        已创建
+-- 创建表 wiki_comment
 CREATE TABLE wiki_comment (
     reply_id BIGSERIAL PRIMARY KEY, -- 自增主键
     wiki_id BIGINT NOT NULL, -- 对应百科ID
@@ -389,7 +389,7 @@ COMMENT ON COLUMN wiki_comment.likes IS '点赞数量';
 COMMENT ON TABLE "wiki_comment" IS 'Wiki留言表';
 
 -- #########################################################
--- 创建表 announcement                                        已创建
+-- 创建表 announcement
 CREATE TABLE announcement (
     ann_id BIGSERIAL PRIMARY KEY, -- 公告ID，自增主键
     content TEXT NOT NULL, -- 公告内容
@@ -407,7 +407,7 @@ COMMENT ON COLUMN announcement.content IS '公告内容';
 COMMENT ON COLUMN announcement.create_time IS '公告创建时间';
 
 -- #########################################################
--- 创建表 ms_ship                                        已创建
+-- 创建表 ms_ship
 CREATE TABLE ms_ship (
     ms_id SERIAL PRIMARY KEY, -- 自增主键，唯一标识每条记录
     content JSONB NOT NULL -- 存储完整百科 JSON 内容（数组/对象均可）
