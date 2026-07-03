@@ -10,6 +10,18 @@ using SidusX.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ─── 解析配置中的环境变量占位符 ${VAR_NAME} ─────────────────────────────────────
+void ResolveEnvPlaceholders(IConfigurationManager config)
+{
+    foreach (var key in config.AsEnumerable().Where(x => x.Value?.StartsWith("${") == true && x.Value.EndsWith("}")).Select(x => x.Key).ToList())
+    {
+        var envVarName = config[key]![2..^1];
+        var envValue = Environment.GetEnvironmentVariable(envVarName);
+        if (!string.IsNullOrEmpty(envValue)) config[key] = envValue;
+    }
+}
+ResolveEnvPlaceholders(builder.Configuration);
+
 // ─── Configuration bindings ─────────────────────────────────────────────────
 builder.Services.Configure<SecuritySettings>(builder.Configuration.GetSection("Security"));
 builder.Services.Configure<ProxySettings>(builder.Configuration.GetSection("Proxy"));
@@ -21,6 +33,12 @@ var connStr = builder.Configuration.GetConnectionString("Default")
               ?? throw new InvalidOperationException("缺少数据库连接字符串 ConnectionStrings:Default");
 var dataSource = NpgsqlDataSource.Create(connStr);
 builder.Services.AddSingleton(dataSource);
+// 注册 NpgsqlConnection 以支持中间件中的直接注入
+builder.Services.AddScoped<NpgsqlConnection>(sp =>
+{
+    var ds = sp.GetRequiredService<NpgsqlDataSource>();
+    return ds.CreateConnection();
+});
 
 // ─── HTTP Clients ─────────────────────────────────────────────────────────────
 var proxySection = builder.Configuration.GetSection("Proxy");
