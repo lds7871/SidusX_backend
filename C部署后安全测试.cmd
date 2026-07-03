@@ -12,7 +12,7 @@ echo 测试目标: %TEST_URL%
 echo.
 
 echo [1/7] 测试正常API访问...
-curl -s -o nul -w "HTTP状态码: %%{http_code}\n" %TEST_URL%/api/serverinfo/JVMoverview
+curl -s -o nul -w "HTTP状态码: %%{http_code}\n" %TEST_URL%/GHapi/serverinfo/runtime
 echo.
 
 echo [2/7] 测试 .vscode 目录访问...

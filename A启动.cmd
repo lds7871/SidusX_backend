@@ -1,3 +1,3 @@
 @echo off
-title GH
-mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Dfile.encoding=GBK"
+title SidusX Backend (.NET 10.0)
+dotnet run --project SidusX_backend.csproj

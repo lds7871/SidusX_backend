@@ -1,4 +1,4 @@
 @echo off
-mvn clean install -U
+dotnet restore SidusX_backend.csproj
 
 pause
