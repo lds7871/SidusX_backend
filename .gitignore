@@ -1,53 +1,47 @@
-target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-代理记录图片.png
+## .NET 生成输出 ##
+bin/
+obj/
+appsettings.json
 
+## Visual Studio / VS Code ##
+.vs/
+.vscode/
+*.suo
+*.user
+*.userprefs
+*.csproj.user
 
+## JetBrains Rider / IntelliJ IDEA ##
+.idea/
+
+## macOS / Windows 系统文件 ##
+.DS_Store
+Thumbs.db
+
+## 自定义脚本（本地开发用，不上传仓库） ##
 B同步项目.cmd
 Bgitee上传.cmd
 Bgitee同步.cmd
 A新版终端启动.cmd
 
-### IntelliJ IDEA ###
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/libraries/
-*.iws
-*.iml
-*.ipr
+## 项目资源截图 ##
+代理记录图片.png
+主页面视图.png
 
-### Eclipse ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+## 敏感配置文件（含数据库密码、邮箱密码等） ##
+appsettings.json
+!appsettings.example.json
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
+## .NET User Secrets ##
+secrets.json
+%APPDATA%\Microsoft\UserSecrets\SidusX-backend-secrets\*
+%USERPROFILE%\.microsoft\UserSecrets\SidusX-backend-secrets\*
 
-### VS Code ###
-.vscode/
+## NuGet 缓存 ##
+*.nupkg
+packages/
+.nuget/
 
-### Mac OS ###
-.DS_Store
-
-### 敏感配置文件 ###
-# 应用配置文件（包含数据库密码、邮箱密码等敏感信息）
-src/main/resources/application.yml
-src/main/resources/application-*.yml
-!src/main/resources/application.example.yml
-# 配置文件
-src/main/resources/config.properties
+## 日志文件 ##
+*.log
+nohup.out

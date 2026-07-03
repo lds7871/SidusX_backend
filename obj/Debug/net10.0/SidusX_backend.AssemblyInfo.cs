@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SidusX_backend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fee811829068a0a33c38472cf8fb5250ff9b2c71")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7b110cad78937182e3af5da7b3d25f59742de5d9")]
 [assembly: System.Reflection.AssemblyProductAttribute("SidusX_backend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SidusX_backend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
