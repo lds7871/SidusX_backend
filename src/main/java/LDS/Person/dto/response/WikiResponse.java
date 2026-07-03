@@ -1,0 +1,170 @@
+package LDS.Person.dto.response;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Arrays;
+
+/**
+ * Wiki 响应 DTO
+ * 用于返回 Wiki 实体信息
+ */
+public class WikiResponse {
+    
+    /**
+     * Wiki ID
+     */
+    @JsonProperty("wiki_id")
+    private Long wikiId;
+    
+    /**
+     * Wiki 键名
+     */
+    @JsonProperty("key_name")
+    private String keyName;
+    
+    /**
+     * Wiki 内容文本
+     */
+    @JsonProperty("texts")
+    private String texts;
+    
+    /**
+     * 标签数组
+     */
+    @JsonProperty("tags")
+    private String[] tags;
+    
+    /**
+     * 版本号
+     */
+    @JsonProperty("version")
+    private Double version;
+    
+    /**
+     * 创建时间
+     */
+    @JsonProperty("create_time")
+    private String createTime;
+    
+    /**
+     * 创建用户
+     */
+    @JsonProperty("create_user")
+    private String createUser;
+    
+    /**
+     * 更新时间
+     */
+    @JsonProperty("update_time")
+    private String updateTime;
+    
+    /**
+     * 更新用户
+     */
+    @JsonProperty("update_user")
+    private String updateUser;
+
+    // 构造函数
+    public WikiResponse() {
+    }
+
+    public WikiResponse(Long wikiId, String keyName, String texts, String[] tags, Double version,
+                        String createTime, String createUser, String updateTime, String updateUser) {
+        this.wikiId = wikiId;
+        this.keyName = keyName;
+        this.texts = texts;
+        this.tags = tags;
+        this.version = version;
+        this.createTime = createTime;
+        this.createUser = createUser;
+        this.updateTime = updateTime;
+        this.updateUser = updateUser;
+    }
+
+    // Getter 和 Setter
+    public Long getWikiId() {
+        return wikiId;
+    }
+
+    public void setWikiId(Long wikiId) {
+        this.wikiId = wikiId;
+    }
+
+    public String getKeyName() {
+        return keyName;
+    }
+
+    public void setKeyName(String keyName) {
+        this.keyName = keyName;
+    }
+
+    public String getTexts() {
+        return texts;
+    }
+
+    public void setTexts(String texts) {
+        this.texts = texts;
+    }
+
+    public String[] getTags() {
+        return tags;
+    }
+
+    public void setTags(String[] tags) {
+        this.tags = tags;
+    }
+
+    public Double getVersion() {
+        return version;
+    }
+
+    public void setVersion(Double version) {
+        this.version = version;
+    }
+
+    public String getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(String createTime) {
+        this.createTime = createTime;
+    }
+
+    public String getCreateUser() {
+        return createUser;
+    }
+
+    public void setCreateUser(String createUser) {
+        this.createUser = createUser;
+    }
+
+    public String getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(String updateTime) {
+        this.updateTime = updateTime;
+    }
+
+    public String getUpdateUser() {
+        return updateUser;
+    }
+
+    public void setUpdateUser(String updateUser) {
+        this.updateUser = updateUser;
+    }
+
+    @Override
+    public String toString() {
+        return "WikiResponse{" +
+                "wikiId=" + wikiId +
+                ", keyName='" + keyName + '\'' +
+                ", texts='" + texts + '\'' +
+                ", tags=" + Arrays.toString(tags) +
+                ", version=" + version +
+                ", createTime='" + createTime + '\'' +
+                ", createUser='" + createUser + '\'' +
+                ", updateTime='" + updateTime + '\'' +
+                ", updateUser='" + updateUser + '\'' +
+                '}';
+    }
+}
