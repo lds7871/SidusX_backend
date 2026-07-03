@@ -1,3 +1,3 @@
 @echo off
-mvn clean package -DskipTests
+dotnet publish SidusX_backend.csproj -c Release -o ./publish
 
